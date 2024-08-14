@@ -1,0 +1,17 @@
+[package]
+name = "ptr"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+clap = { version = "4.5.11", features = ["derive"] }
+colored = "2.1.0"
+futures-util = "0.3.30"
+home = "0.5.9"
+indicatif = { version = "0.17.8", features = ["tokio"] }
+reqwest = { version = "0.12.5", features = ["json", "stream"] }
+serde = { version = "1.0.207", features = ["derive"] }
+tabwriter = { version = "1.4.0", features = ["ansi_formatting"] }
+tokio = { version = "1.39.2", features = ["rt", "rt-multi-thread"] }
+toml = "0.8.19"
