@@ -28,7 +28,7 @@ For more general pattern matching and downloading, check another tool I wrote: [
 
 ## Usage
 
-This tool will create a file at `%APPDATA%\Local\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml` to store the installed plugins.
+This tool will create a file at `%APPDATA%\Local\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml` to store installed plugins.
 
 ```
 Usage: ptr.exe <COMMAND>
