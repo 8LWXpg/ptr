@@ -3,12 +3,11 @@ use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::header::{HeaderMap, ACCEPT, USER_AGENT};
 use reqwest::Client;
-use serde::{Deserialize, Serialize, Serializer};
-use std::collections::{BTreeMap, HashMap};
-use std::fs::File;
+use serde::Deserialize;
+use std::fs::{self, File};
 use std::io::{self, Write};
-use std::thread;
-use std::time::Duration;
+use std::path::Path;
+use zip::ZipArchive;
 
 use crate::PLUGIN_PATH;
 
@@ -91,19 +90,44 @@ pub async fn gh_dl(
             .progress_chars("=> "),
     );
     pb.set_message("Downloading");
-
-    let mut file = File::create(&*PLUGIN_PATH.join(name))?;
-    // let mut downloaded: u64 = 0;
+    let file_path = PLUGIN_PATH.join(name);
+    let mut file = File::create(&file_path)?;
     let mut stream = res.bytes_stream();
-
     while let Some(item) = stream.next().await {
         let chunk = item?;
         file.write_all(&chunk)?;
         pb.inc(chunk.len() as u64);
     }
-
     pb.finish_and_clear();
+
+    extract_zip(&file_path, &PLUGIN_PATH)?;
+    fs::remove_file(&file_path)?;
+
     Ok(tag)
+}
+
+fn extract_zip(zip_path: &Path, output_dir: &Path) -> Result<()> {
+    let file = File::open(zip_path)?;
+    let mut archive = ZipArchive::new(file)?;
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+        let out_path = Path::new(output_dir).join(file.name());
+
+        if (file.name()).ends_with('/') {
+            fs::create_dir_all(&out_path)?;
+        } else {
+            if let Some(p) = out_path.parent() {
+                if !p.exists() {
+                    fs::create_dir_all(p)?;
+                }
+            }
+            let mut out_file = File::create(&out_path)?;
+            io::copy(&mut file, &mut out_file)?;
+        }
+    }
+
+    Ok(())
 }
 
 #[macro_export]
@@ -152,15 +176,17 @@ macro_rules! remove {
     };
 }
 
-pub fn sort_keys<T, S>(value: &HashMap<String, T>, serializer: S) -> Result<S::Ok, S::Error>
-where
-    T: Serialize,
-    S: Serializer,
-{
-    value
-        .iter()
-        .collect::<BTreeMap<_, _>>()
-        .serialize(serializer)
+/// Print an error message to stderr.
+#[macro_export]
+macro_rules! error {
+    ($msg:expr) => {{
+        use colored::Colorize;
+        eprintln!("{} {}", "error:".bright_red().bold(), $msg)
+    }};
+    ($fmt:expr, $($arg:tt)*) => {{
+        use colored::Colorize;
+        eprintln!("{} {}", "error:".bright_red().bold(), format!($fmt, $($arg)*))
+    }};
 }
 
 /// prompt the user for a yes/no response.

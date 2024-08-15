@@ -76,17 +76,6 @@ fn get_styles() -> clap::builder::Styles {
         .placeholder(styling::AnsiColor::Cyan.on_default())
 }
 
-/// Print an error message to stderr.
-#[macro_export]
-macro_rules! error {
-    ($msg:expr) => {
-        eprintln!("{} {}", "error:".bright_red().bold(), $msg)
-    };
-    ($fmt:expr, $($arg:tt)*) => {
-        eprintln!("{} {}", "error:".bright_red().bold(), format!($fmt, $($arg)*))
-    };
-}
-
 fn error_exit0<T>(msg: T)
 where
     T: std::fmt::Display,
@@ -106,9 +95,9 @@ fn main() {
             } => config.add(name, repo, version).unwrap_or_else(error_exit0),
             TopCommand::Update { name, all } => {
                 if all {
-                    println!("Updating all plugins");
+                    config.update_all();
                 } else {
-                    println!("Updating plugins: {:?}", name);
+                    config.update(name);
                 }
             }
             TopCommand::Remove { name } => {
