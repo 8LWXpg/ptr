@@ -188,19 +188,3 @@ macro_rules! error {
         eprintln!("{} {}", "error:".bright_red().bold(), format!($fmt, $($arg)*))
     }};
 }
-
-/// prompt the user for a yes/no response.
-///
-/// # Arguments
-/// `message` - The prompt to display, appended with " [y/N]: "
-pub fn prompt(message: &str) -> Result<bool> {
-    let mut input = String::new();
-    print!("{} [y/N]: ", message);
-    io::stdout().flush()?; // Make sure the prompt is immediately displayed
-    io::stdin().read_line(&mut input)?;
-    match input.trim().to_lowercase().as_str() {
-        "y" => Ok(true),
-        "n" => Ok(false),
-        _ => Ok(false),
-    }
-}

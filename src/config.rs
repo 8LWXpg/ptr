@@ -1,13 +1,14 @@
 use anyhow::Result;
+use colored::Colorize;
+use core::fmt;
 use serde::{Deserialize, Serialize, Serializer};
-use std::{
-    collections::{hash_map::Entry, BTreeMap, HashMap},
-    fs::{self, File},
-    io::Write,
-};
+use std::collections::{hash_map::Entry, BTreeMap, HashMap};
+use std::fs;
+use std::io::Write;
+use tabwriter::TabWriter;
 use tokio::runtime::Runtime;
 
-use crate::{add, error, gh_dl, CONFIG_PATH};
+use crate::{add, error, gh_dl, remove, CONFIG_PATH, PLUGIN_PATH};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 enum Arch {
@@ -42,6 +43,12 @@ impl Plugin {
     fn update(&mut self, arch: Arch) -> Result<()> {
         let rt = Runtime::new()?;
         self.version = rt.block_on(gh_dl!(&self.repo, None, arch.into(), self.version.clone()))?;
+        Ok(())
+    }
+
+    /// Remove the `PLUGIN_PATH/name` directory.
+    fn remove(&self, name: &str) -> Result<()> {
+        fs::remove_dir_all(&*PLUGIN_PATH.join(name))?;
         Ok(())
     }
 }
@@ -116,5 +123,45 @@ impl Config {
         }
         self.save()
             .unwrap_or_else(|e| error!("Failed to save config: {}", e));
+    }
+
+    pub fn remove(&mut self, names: Vec<String>) {
+        for name in names {
+            if let Some(plugin) = self.plugins.get(&name) {
+                match plugin.remove(&name) {
+                    Ok(_) => {
+                        self.plugins.remove(&name);
+                        remove!(name);
+                    }
+                    Err(e) => error!("Failed to remove {}: {}", name, e),
+                }
+            }
+        }
+        self.save()
+            .unwrap_or_else(|e| error!("Failed to save config: {}", e));
+    }
+}
+
+impl fmt::Display for Config {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut tw = TabWriter::new(vec![]);
+        writeln!(&mut tw, "{}", "Plugins:".bright_green()).unwrap();
+        let btree_map: BTreeMap<_, _> = self.plugins.iter().collect();
+        for (name, plugin) in &btree_map {
+            writeln!(
+                &mut tw,
+                "  {}\t{}\t{}",
+                name.bright_cyan(),
+                plugin.repo,
+                plugin.version
+            )
+            .unwrap();
+        }
+        tw.flush().unwrap();
+        write!(
+            f,
+            "{}",
+            String::from_utf8(tw.into_inner().unwrap()).unwrap()
+        )
     }
 }

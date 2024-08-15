@@ -2,8 +2,7 @@ mod config;
 mod util;
 
 use clap::{builder::styling, Parser, Subcommand};
-use colored::Colorize;
-use std::{fs, process};
+use std::process;
 use std::{path::PathBuf, sync::LazyLock};
 
 static PLUGIN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
@@ -100,12 +99,8 @@ fn main() {
                     config.update(name);
                 }
             }
-            TopCommand::Remove { name } => {
-                println!("Removing plugins: {:?}", name);
-            }
-            TopCommand::List => {
-                println!("Listing plugins");
-            }
+            TopCommand::Remove { name } => config.remove(name),
+            TopCommand::List => print!("{}", config),
         },
         Err(e) => error_exit0(e),
     }
