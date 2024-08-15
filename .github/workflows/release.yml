@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-upload:
+    name: release ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        include:
+        - target: x86_64-pc-windows-msvc
+          os: windows-latest
+        - target: aarch64-pc-windows-msvc
+          os: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        target: ${{ matrix.target }}
+
+    - name: Run Cargo
+      run: cargo build --release --target ${{ matrix.target }}
+
+    - name: create artifact directory
+      run: 7z a "ptr-${{ matrix.target }}.zip" README.md LICENSE target/${{ matrix.target }}/release/gpm.exe
+
+    - uses: ncipollo/release-action@v1.14.0
+      with:
+        artifacts: "ptr-${{ matrix.target }}.zip"
+        allowUpdates: true
+        omitNameDuringUpdate: true
+        omitBodyDuringUpdate: true

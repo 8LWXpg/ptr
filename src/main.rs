@@ -32,10 +32,11 @@ struct App {
 #[derive(Subcommand)]
 enum TopCommand {
     #[clap(visible_alias = "a", arg_required_else_help = true)]
+    /// Add a plugin.
     Add {
-        /// The name of the plugin, same as the extracted folder name.
+        /// The name of the plugin, same as the folder name in zip file.
         name: String,
-        /// The GitHub repository to download from.
+        /// The GitHub repository of the plugin.
         repo: String,
         #[clap(short, long)]
         /// The target version of the plugin.
@@ -43,6 +44,7 @@ enum TopCommand {
     },
 
     #[clap(visible_alias = "u", arg_required_else_help = true)]
+    /// Update plugins.
     Update {
         #[clap(num_args = 1..)]
         /// The name of the plugins to update.
@@ -53,6 +55,7 @@ enum TopCommand {
     },
 
     #[clap(visible_alias = "r", arg_required_else_help = true)]
+    /// Remove plugins.
     Remove {
         #[clap(num_args = 1..)]
         /// The name of the plugins to remove.

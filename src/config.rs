@@ -18,6 +18,16 @@ enum Arch {
     ARM64,
 }
 
+impl Default for Arch {
+    fn default() -> Self {
+        match std::env::consts::ARCH {
+            "x86_64" => Arch::X64,
+            "aarch64" => Arch::ARM64,
+            _ => unreachable!(),
+        }
+    }
+}
+
 impl From<Arch> for &str {
     fn from(val: Arch) -> Self {
         match val {
@@ -77,7 +87,7 @@ impl Config {
             Ok(toml::from_str(&fs::read_to_string(&*CONFIG_PATH).unwrap())?)
         } else {
             Ok(Self {
-                arch: Arch::X64,
+                arch: Arch::default(),
                 plugins: HashMap::new(),
             })
         }
