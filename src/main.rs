@@ -13,7 +13,7 @@ static PLUGIN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     home::home_dir()
         .unwrap()
-        .join("AppData/Local/Microsoft/PowerToys/PowerToys Run/Plugins/ptr.toml")
+        .join("AppData/Local/Microsoft/PowerToys/PowerToys Run/Plugins/version.toml")
 });
 
 #[derive(Parser)]
