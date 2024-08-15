@@ -62,6 +62,10 @@ enum TopCommand {
     #[clap(visible_alias = "l")]
     /// List all installed plugins.
     List,
+
+    #[clap(visible_alias = "i")]
+    /// Import plugins from configuration file.
+    Import,
 }
 
 fn get_styles() -> clap::builder::Styles {
@@ -101,6 +105,7 @@ fn main() {
             }
             TopCommand::Remove { name } => config.remove(name),
             TopCommand::List => print!("{}", config),
+            TopCommand::Import => config.import(),
         },
         Err(e) => error_exit0(e),
     }

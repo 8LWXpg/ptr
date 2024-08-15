@@ -140,6 +140,26 @@ impl Config {
         self.save()
             .unwrap_or_else(|e| error!("Failed to save config: {}", e));
     }
+
+    pub fn import(&mut self) {
+        let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
+        for (name, plugin) in &self.plugins {
+            match Plugin::add(
+                plugin.repo.clone(),
+                Some(plugin.version.clone()),
+                self.arch.clone(),
+            ) {
+                Ok(plugin) => {
+                    add!("{}@{}", name, &plugin.version);
+                    new_plugins.insert(name.clone(), plugin);
+                }
+                Err(e) => error!("Failed to import {}: {}", name, e),
+            }
+        }
+        self.plugins = new_plugins;
+        self.save()
+            .unwrap_or_else(|e| error!("Failed to save config: {}", e));
+    }
 }
 
 impl fmt::Display for Config {
