@@ -6,9 +6,8 @@ use std::collections::{hash_map::Entry, BTreeMap, HashMap};
 use std::fs;
 use std::io::Write;
 use tabwriter::TabWriter;
-use tokio::runtime::Runtime;
 
-use crate::{add, error, gh_dl, remove, CONFIG_PATH, PLUGIN_PATH};
+use crate::{add, error, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PATH};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 enum Arch {
@@ -45,15 +44,20 @@ struct Plugin {
 
 impl Plugin {
     fn add(repo: String, version: Option<String>, arch: Arch) -> Result<Self> {
-        let rt = Runtime::new()?;
-        let version = rt.block_on(gh_dl!(&repo, version, arch.into()))?;
+        let version = gh_dl!(&repo, version, arch.into())?;
         Ok(Self { repo, version })
     }
 
-    fn update(&mut self, arch: Arch) -> Result<()> {
-        let rt = Runtime::new()?;
-        self.version = rt.block_on(gh_dl!(&self.repo, None, arch.into(), self.version.clone()))?;
-        Ok(())
+    /// Update the plugin to the latest version.
+    /// Return `true` if the version is updated.
+    fn update(&mut self, arch: Arch) -> Result<bool> {
+        let version = gh_dl!(&self.repo, None, arch.into(), self.version.clone())?;
+        if version != self.version {
+            self.version = version;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 
     /// Remove the `PLUGIN_PATH/name` directory.
@@ -115,7 +119,13 @@ impl Config {
         for name in names {
             if let Some(plugin) = self.plugins.get_mut(&name) {
                 match plugin.update(self.arch.clone()) {
-                    Ok(_) => add!("{}@{}", name, plugin.version),
+                    Ok(updated) => {
+                        if updated {
+                            add!("{}@{}", name, plugin.version)
+                        } else {
+                            up_to_date!("{}@{}", name, plugin.version)
+                        }
+                    }
                     Err(e) => error!("Failed to update {}: {}", name, e),
                 }
             }
@@ -127,7 +137,13 @@ impl Config {
     pub fn update_all(&mut self) {
         for (name, plugin) in &mut self.plugins {
             match plugin.update(self.arch.clone()) {
-                Ok(_) => add!("{}@{}", name, plugin.version),
+                Ok(updated) => {
+                    if updated {
+                        add!("{}@{}", name, plugin.version)
+                    } else {
+                        up_to_date!("{}@{}", name, plugin.version)
+                    }
+                }
                 Err(e) => error!("Failed to update {}: {}", name, e),
             }
         }
