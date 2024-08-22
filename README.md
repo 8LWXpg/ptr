@@ -1,5 +1,7 @@
 # PowerToys Run Plugin Manager
 
+![preview](https://github.com/user-attachments/assets/94489f6f-0301-4427-8c44-2f801201c64f)
+
 This is a cli tool to manage PowerToys Run plugins. It can be used to install, uninstall, update, list, and import plugins.
 
 ## Installation
