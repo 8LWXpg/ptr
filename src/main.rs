@@ -2,7 +2,6 @@ mod config;
 mod util;
 
 use clap::{builder::styling, Parser, Subcommand};
-use std::process;
 use std::{path::PathBuf, sync::LazyLock};
 
 static PLUGIN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
@@ -82,14 +81,6 @@ fn get_styles() -> clap::builder::Styles {
         .placeholder(styling::AnsiColor::Cyan.on_default())
 }
 
-fn error_exit0<T>(msg: T)
-where
-    T: std::fmt::Display,
-{
-    error!(msg);
-    process::exit(0);
-}
-
 fn main() {
     let args = App::parse();
     match config::Config::new() {
@@ -98,7 +89,7 @@ fn main() {
                 name,
                 repo,
                 version,
-            } => config.add(name, repo, version).unwrap_or_else(error_exit0),
+            } => config.add(name, repo, version).unwrap_or_else(|e| exit!(e)),
             TopCommand::Update { name, all } => {
                 if all {
                     config.update_all();
@@ -110,6 +101,6 @@ fn main() {
             TopCommand::List => print!("{}", config),
             TopCommand::Import => config.import(),
         },
-        Err(e) => error_exit0(e),
+        Err(e) => exit!(e),
     }
 }
