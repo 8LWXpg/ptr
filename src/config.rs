@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use colored::Colorize;
 use core::fmt;
 use serde::{Deserialize, Serialize, Serializer};
@@ -7,7 +7,8 @@ use std::fs;
 use std::io::Write;
 use tabwriter::TabWriter;
 
-use crate::{add, error, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PATH};
+use crate::util::{kill_ptr, start_ptr};
+use crate::{add, error, exit, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PATH};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 enum Arch {
@@ -104,18 +105,21 @@ impl Config {
 
     pub fn add(&mut self, name: String, repo: String, version: Option<String>) -> Result<()> {
         if let Entry::Vacant(e) = self.plugins.entry(name.clone()) {
+            kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
             let version = &e
                 .insert(Plugin::add(repo, version, self.arch.clone())?)
                 .version;
             add!("{}@{}", name, version);
+            start_ptr().unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
             self.save()?;
             Ok(())
         } else {
-            Err(anyhow::anyhow!("Plugin already exists"))
+            bail!("Plugin already exists")
         }
     }
 
     pub fn update(&mut self, names: Vec<String>) {
+        kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
         for name in names {
             if let Some(plugin) = self.plugins.get_mut(&name) {
                 match plugin.update(self.arch.clone()) {
@@ -130,11 +134,13 @@ impl Config {
                 }
             }
         }
+        start_ptr().unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
         self.save()
-            .unwrap_or_else(|e| error!("Failed to save config: {}", e));
+            .unwrap_or_else(|e| exit!("Failed to save config: {}", e));
     }
 
     pub fn update_all(&mut self) {
+        kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
         for (name, plugin) in &mut self.plugins {
             match plugin.update(self.arch.clone()) {
                 Ok(updated) => {
@@ -147,11 +153,13 @@ impl Config {
                 Err(e) => error!("Failed to update {}: {}", name, e),
             }
         }
+        start_ptr().unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
         self.save()
-            .unwrap_or_else(|e| error!("Failed to save config: {}", e));
+            .unwrap_or_else(|e| exit!("Failed to save config: {}", e));
     }
 
     pub fn remove(&mut self, names: Vec<String>) {
+        kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
         for name in names {
             if let Some(plugin) = self.plugins.get(&name) {
                 match plugin.remove(&name) {
@@ -163,12 +171,14 @@ impl Config {
                 }
             }
         }
+        start_ptr().unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
         self.save()
-            .unwrap_or_else(|e| error!("Failed to save config: {}", e));
+            .unwrap_or_else(|e| exit!("Failed to save config: {}", e));
     }
 
     pub fn import(&mut self) {
         let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
+        kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
         for (name, plugin) in &self.plugins {
             match Plugin::add(
                 plugin.repo.clone(),
@@ -179,12 +189,13 @@ impl Config {
                     add!("{}@{}", name, &plugin.version);
                     new_plugins.insert(name.clone(), plugin);
                 }
-                Err(e) => error!("Failed to import {}: {}", name, e),
+                Err(e) => exit!("Failed to import {}: {}", name, e),
             }
         }
+        start_ptr().unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
         self.plugins = new_plugins;
         self.save()
-            .unwrap_or_else(|e| error!("Failed to save config: {}", e));
+            .unwrap_or_else(|e| exit!("Failed to save config: {}", e));
     }
 }
 

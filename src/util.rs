@@ -4,7 +4,14 @@ use reqwest::header::{HeaderMap, ACCEPT, USER_AGENT};
 use serde::Deserialize;
 use std::fs::{self, File};
 use std::io::{self, Write};
+use std::mem;
 use std::path::Path;
+use std::process::Command;
+use std::time::Duration;
+use windows::core::{w, HSTRING, PCWSTR};
+use windows::Win32::Foundation::CloseHandle;
+use windows::Win32::System::Threading::{GetExitCodeProcess, WaitForSingleObject, INFINITE};
+use windows::Win32::UI::Shell::{ShellExecuteExW, SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW};
 use zip::ZipArchive;
 
 use crate::PLUGIN_PATH;
@@ -36,6 +43,8 @@ macro_rules! gh_dl {
 ///
 /// * `repo` - The repository to download from.
 /// * `version` - The tagged version of the repository to download.
+/// * `arch` - The architecture of the system.
+/// * `current_version` - The current version of the repository that is installed.
 ///
 /// # Returns
 /// The version of the repository that was downloaded.
@@ -114,6 +123,46 @@ fn extract_zip(zip_path: &Path, output_dir: &Path) -> Result<()> {
     Ok(())
 }
 
+fn run_as_admin(program: &str, args: &str) -> Result<()> {
+    let mut sei: SHELLEXECUTEINFOW = unsafe { mem::zeroed() };
+    sei.cbSize = mem::size_of::<SHELLEXECUTEINFOW>() as u32;
+    sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+    sei.lpVerb = w!("runas");
+    let h_file = HSTRING::from(program);
+    sei.lpFile = PCWSTR(h_file.as_ptr());
+    sei.nShow = 0; // SW_HIDE
+    let h_args = HSTRING::from(args);
+    sei.lpParameters = PCWSTR(h_args.as_ptr());
+
+    unsafe {
+        ShellExecuteExW(&mut sei)?;
+        let process = sei.hProcess;
+        _ = WaitForSingleObject(process, INFINITE);
+        let mut exit_code = 0;
+        GetExitCodeProcess(process, &mut exit_code)?;
+        CloseHandle(process)?;
+
+        if exit_code == 0 {
+            Ok(())
+        } else {
+            Err(std::io::Error::from_raw_os_error(exit_code as i32).into())
+        }
+    }
+}
+
+pub fn kill_ptr() -> Result<()> {
+    run_as_admin("taskkill.exe", "/F /FI \"IMAGENAME eq PowerToys*\"")?;
+    // wait for file handle to be released
+    std::thread::sleep(Duration::from_millis(100));
+    Ok(())
+}
+
+pub fn start_ptr() -> Result<()> {
+    let c = Command::new("C:\\Program Files\\PowerToys\\PowerToys.exe").spawn()?;
+    mem::forget(c);
+    Ok(())
+}
+
 #[macro_export]
 macro_rules! tabwriter {
     ($fmt:expr, $($arg:tt)*) => {{
@@ -170,5 +219,18 @@ macro_rules! error {
     ($fmt:expr, $($arg:tt)*) => {{
         use colored::Colorize;
         eprintln!("{} {}", "error:".bright_red().bold(), format!($fmt, $($arg)*))
+    }};
+}
+
+/// Print a error message to stderr and exit with code 0.
+#[macro_export]
+macro_rules! exit {
+    ($msg:expr) => {{
+        $crate::error!($msg);
+        std::process::exit(0);
+    }};
+    ($fmt:expr, $($arg:tt)*) => {{
+        $crate::error!($fmt, $($arg)*);
+        std::process::exit(0);
     }};
 }

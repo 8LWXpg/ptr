@@ -20,9 +20,8 @@
                 }
             },
             "args": [
-                "a",
+                "r",
                 "GitHubRepo",
-                "8LWXpg/PowerToysRun-GitHubRepo"
             ],
             "cwd": "${workspaceFolder}"
         },
