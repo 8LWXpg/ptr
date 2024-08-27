@@ -36,9 +36,9 @@ jobs:
     - name: Run Cargo
       run: |
         if ("${{ matrix.feature }}" -eq "sudo") {
-          cargo build --release --target $env:matrix_target
+          cargo build --release --target "${{ matrix.target }}"
         } else {
-          cargo build --release --target $env:matrix_target --features $env:matrix_feature
+          cargo build --release --target "${{ matrix.target }}" --features "${{ matrix.feature }}"
         }
 
     - name: Archive
