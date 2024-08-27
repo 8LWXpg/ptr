@@ -35,7 +35,7 @@ jobs:
 
     - name: Run Cargo
       run: |
-        if ($env:matrix_feature -eq "sudo") {
+        if ("${{ matrix.feature }}" -eq "sudo") {
           cargo build --release --target $env:matrix_target
         } else {
           cargo build --release --target $env:matrix_target --features $env:matrix_feature
