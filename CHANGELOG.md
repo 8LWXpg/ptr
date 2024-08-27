@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.3.0]
+
+### Added
+
+- Now polling for file access after killing PowerToys, with interval of 50ms and max retries of 10.
+- Create feature `winapi` that uses Windows API to elevate the process, the default is using `sudo`.
+
 ## [0.2.0]
 
 ### Added
