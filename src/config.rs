@@ -7,6 +7,7 @@ use std::fs;
 use std::io::Write;
 use tabwriter::TabWriter;
 
+use crate::polling::FileAccessWrapper;
 use crate::util::{kill_ptr, start_ptr};
 use crate::{add, error, exit, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PATH};
 
@@ -63,7 +64,7 @@ impl Plugin {
 
     /// Remove the `PLUGIN_PATH/name` directory.
     fn remove(&self, name: &str) -> Result<()> {
-        fs::remove_dir_all(&*PLUGIN_PATH.join(name))?;
+        FileAccessWrapper::remove_dir_all(&*PLUGIN_PATH.join(name))?;
         Ok(())
     }
 }

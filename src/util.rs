@@ -7,13 +7,9 @@ use std::io::{self, Write};
 use std::mem;
 use std::path::Path;
 use std::process::Command;
-use std::time::Duration;
-use windows::core::{w, HSTRING, PCWSTR};
-use windows::Win32::Foundation::CloseHandle;
-use windows::Win32::System::Threading::{GetExitCodeProcess, WaitForSingleObject, INFINITE};
-use windows::Win32::UI::Shell::{ShellExecuteExW, SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW};
 use zip::ZipArchive;
 
+use crate::polling::FileAccessWrapper;
 use crate::PLUGIN_PATH;
 
 #[derive(Deserialize)]
@@ -116,14 +112,20 @@ fn extract_zip(zip_path: &Path, output_dir: &Path) -> Result<()> {
                 }
             }
             let mut out_file = File::create(&out_path)?;
-            io::copy(&mut file, &mut out_file)?;
+            FileAccessWrapper::copy(&mut file, &mut out_file)?;
         }
     }
 
     Ok(())
 }
 
+#[cfg(feature = "winapi")]
 fn run_as_admin(program: &str, args: &str) -> Result<()> {
+    use windows::core::{w, HSTRING, PCWSTR};
+    use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::System::Threading::{GetExitCodeProcess, WaitForSingleObject, INFINITE};
+    use windows::Win32::UI::Shell::{ShellExecuteExW, SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW};
+
     let mut sei: SHELLEXECUTEINFOW = unsafe { mem::zeroed() };
     sei.cbSize = mem::size_of::<SHELLEXECUTEINFOW>() as u32;
     sei.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -145,15 +147,25 @@ fn run_as_admin(program: &str, args: &str) -> Result<()> {
         if exit_code == 0 {
             Ok(())
         } else {
-            Err(std::io::Error::from_raw_os_error(exit_code as i32).into())
+            Err(io::Error::from_raw_os_error(exit_code as i32).into())
         }
+    }
+}
+
+#[cfg(not(feature = "winapi"))]
+fn run_as_admin(program: &str, args: &str) -> Result<()> {
+    use std::os::windows::process::CommandExt;
+
+    let output = Command::new("sudo").arg(program).raw_arg(args).output()?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(io::Error::from_raw_os_error(output.status.code().unwrap()).into())
     }
 }
 
 pub fn kill_ptr() -> Result<()> {
     run_as_admin("taskkill.exe", "/F /FI \"IMAGENAME eq PowerToys*\"")?;
-    // wait for file handle to be released
-    std::thread::sleep(Duration::from_millis(100));
     Ok(())
 }
 

@@ -3,5 +3,8 @@
         "indicatif",
         "reqwest",
         "tabwriter"
+    ],
+    "rust-analyzer.cargo.features": [
+        // "winapi"
     ]
 }
