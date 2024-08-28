@@ -6,13 +6,20 @@ This is a cli tool to manage PowerToys Run plugins. It can be used to install, u
 
 ## Installation
 
-Download binary from [releases]() page.
+Download binary from [releases](https://github.com/8LWXpg/ptr/releases) page.
 
 or build from source:
 
 ```
 cargo install --git https://github.com/8LWXpg/ptr.git
 ```
+
+### Features
+
+Currently it has 2 variants:
+
+- `sudo` - calls `sudo.exe` to elevate the process.
+- `winapi` - uses Windows API to elevate the process.
 
 ## Limitations
 
