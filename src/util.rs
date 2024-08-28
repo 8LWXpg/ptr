@@ -9,7 +9,7 @@ use std::path::Path;
 use std::process::Command;
 use zip::ZipArchive;
 
-use crate::polling::FileAccessWrapper;
+use crate::polling;
 use crate::PLUGIN_PATH;
 
 #[derive(Deserialize)]
@@ -112,7 +112,7 @@ fn extract_zip(zip_path: &Path, output_dir: &Path) -> Result<()> {
                 }
             }
             let mut out_file = File::create(&out_path)?;
-            FileAccessWrapper::copy(&mut file, &mut out_file)?;
+            polling::copy(&mut file, &mut out_file)?;
         }
     }
 
