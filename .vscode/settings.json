@@ -4,7 +4,5 @@
         "reqwest",
         "tabwriter"
     ],
-    "rust-analyzer.cargo.features": [
-        // "winapi"
-    ]
+    "rust-analyzer.cargo.features": []
 }

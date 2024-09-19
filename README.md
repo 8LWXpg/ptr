@@ -89,6 +89,11 @@ Options:
   -h, --help  Print help
 ```
 
+e.g.
+```
+ptr u -a
+```
+
 ### Remove
 
 ```
@@ -99,6 +104,11 @@ Arguments:
 
 Options:
   -h, --help  Print help
+```
+
+e.g.
+```
+ptr r GitHubRepo ProcessKiller
 ```
 
 ### List

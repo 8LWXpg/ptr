@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-upload:
-    name: release ${{ matrix.target }} ${{ matrix.feature }}
+    name: release ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
@@ -16,16 +16,8 @@ jobs:
         include:
         - target: x86_64-pc-windows-msvc
           os: windows-latest
-          feature: sudo
         - target: aarch64-pc-windows-msvc
           os: windows-latest
-          feature: sudo
-        - target: x86_64-pc-windows-msvc
-          os: windows-latest
-          feature: winapi
-        - target: aarch64-pc-windows-msvc
-          os: windows-latest
-          feature: winapi
 
     steps:
     - uses: actions/checkout@v4
@@ -34,19 +26,14 @@ jobs:
         target: ${{ matrix.target }}
 
     - name: Run Cargo
-      run: |
-        if ("${{ matrix.feature }}" -eq "sudo") {
-          cargo build --release --target "${{ matrix.target }}"
-        } else {
-          cargo build --release --target "${{ matrix.target }}" --features "${{ matrix.feature }}"
-        }
+      run: cargo build --release --target "${{ matrix.target }}"
 
     - name: Archive
-      run: 7z a "ptr-${{ matrix.target }}-${{ matrix.feature }}.zip" README.md LICENSE ./target/${{ matrix.target }}/release/ptr.exe
+      run: 7z a "ptr-${{ matrix.target }}.zip" README.md LICENSE ./target/${{ matrix.target }}/release/ptr.exe
 
     - uses: ncipollo/release-action@v1.14.0
       with:
-        artifacts: "ptr-${{ matrix.target }}-${{ matrix.feature }}.zip"
+        artifacts: "ptr-${{ matrix.target }}.zip"
         allowUpdates: true
         omitNameDuringUpdate: true
         omitBodyDuringUpdate: true

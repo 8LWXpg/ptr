@@ -6,6 +6,10 @@
 
 - Support for renaming the downloaded plugin folder to the provided name.
 
+### Changed
+
+- Default to using `winapi` to elevate the process, as there's no major difference between `sudo` and `winapi`.
+
 ## [0.3.0]
 
 ### Added

@@ -125,7 +125,6 @@ fn extract_zip(zip_path: &Path, output_dir: &Path, root_name: &str) -> Result<()
 	Ok(())
 }
 
-#[cfg(feature = "winapi")]
 fn run_as_admin(program: &str, args: &str) -> Result<()> {
 	use windows::core::{w, HSTRING, PCWSTR};
 	use windows::Win32::Foundation::CloseHandle;
@@ -155,18 +154,6 @@ fn run_as_admin(program: &str, args: &str) -> Result<()> {
 		} else {
 			Err(io::Error::from_raw_os_error(exit_code as i32).into())
 		}
-	}
-}
-
-#[cfg(not(feature = "winapi"))]
-fn run_as_admin(program: &str, args: &str) -> Result<()> {
-	use std::os::windows::process::CommandExt;
-
-	let output = Command::new("sudo").arg(program).raw_arg(args).output()?;
-	if output.status.success() {
-		Ok(())
-	} else {
-		Err(io::Error::from_raw_os_error(output.status.code().unwrap()).into())
 	}
 }
 
