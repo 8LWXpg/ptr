@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.4.0]
+
+### Added
+
+- Support for renaming the downloaded plugin folder to the provided name.
+
 ## [0.3.0]
 
 ### Added

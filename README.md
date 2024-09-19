@@ -16,10 +16,11 @@ cargo install --git https://github.com/8LWXpg/ptr.git
 
 ### Features
 
-Currently it has 2 variants:
-
-- `sudo` - calls `sudo.exe` to elevate the process.
-- `winapi` - uses Windows API to elevate the process.
+- Easy to use command line interface with informative help messages.
+- Automatically download and install plugins from GitHub.
+- Restart PowerToys after installing or removing plugins.
+- Update all plugins with a single command.
+- Restore plugins from a configuration file.
 
 ## Limitations
 
@@ -28,7 +29,7 @@ Currently it has 2 variants:
 - The zip structure must be like this:
   ```
   something-x64.zip
-  └── pluginName
+  └── anyPluginName
       └── plugin files...
   ```
 
@@ -61,7 +62,7 @@ Options:
 Usage: ptr.exe add <NAME> <REPO>
 
 Arguments:
-  <NAME>  The name of the plugin, same as the folder name in zip file.
+  <NAME>  The name of the plugin, can be anything.
   <REPO>  The GitHub repository of the plugin
 
 Options:

@@ -25,11 +25,11 @@ struct Assets {
 }
 #[macro_export]
 macro_rules! gh_dl {
-	($repo:expr, $version:expr, $arch:expr) => {
-		$crate::util::gh_dl($repo, $version, $arch, None)
+	($root_name:expr, $repo:expr, $version:expr, $arch:expr) => {
+		$crate::util::gh_dl($root_name, $repo, $version, $arch, None)
 	};
-	($repo:expr, $version:expr, $arch:expr, $current_version:expr) => {
-		$crate::util::gh_dl($repo, $version, $arch, Some($current_version))
+	($root_name:expr, $repo:expr, $version:expr, $arch:expr, $current_version:expr) => {
+		$crate::util::gh_dl($root_name, $repo, $version, $arch, Some($current_version))
 	};
 }
 
@@ -45,6 +45,7 @@ macro_rules! gh_dl {
 /// # Returns
 /// The version of the repository that was downloaded.
 pub fn gh_dl(
+	root_name: &str,
 	repo: &str,
 	version: Option<String>,
 	arch: &str,
@@ -89,13 +90,13 @@ pub fn gh_dl(
 	let mut file = File::create(&file_path)?;
 	file.write_all(&res.bytes()?)?;
 
-	extract_zip(&file_path, &PLUGIN_PATH)?;
+	extract_zip(&file_path, &PLUGIN_PATH, root_name)?;
 	fs::remove_file(&file_path)?;
 
 	Ok(tag)
 }
 
-fn extract_zip(zip_path: &Path, output_dir: &Path) -> Result<()> {
+fn extract_zip(zip_path: &Path, output_dir: &Path, root_name: &str) -> Result<()> {
 	let file = File::open(zip_path)?;
 	let mut archive = ZipArchive::new(file)?;
 
@@ -114,6 +115,11 @@ fn extract_zip(zip_path: &Path, output_dir: &Path) -> Result<()> {
 			let mut out_file = File::create(&out_path)?;
 			polling::copy(&mut file, &mut out_file)?;
 		}
+	}
+
+	let root_path = output_dir.join(root_name);
+	if !root_path.exists() {
+		fs::rename(output_dir.join(archive.by_index(0)?.name()), &root_path)?;
 	}
 
 	Ok(())

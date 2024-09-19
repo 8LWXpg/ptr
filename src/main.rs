@@ -34,7 +34,7 @@ enum TopCommand {
 	#[clap(visible_alias = "a", arg_required_else_help = true)]
 	/// Add a plugin.
 	Add {
-		/// The name of the plugin, same as the folder name in zip file.
+		/// The name of the plugin, can be anything.
 		name: String,
 		/// The GitHub repository of the plugin.
 		repo: String,

@@ -45,15 +45,15 @@ struct Plugin {
 }
 
 impl Plugin {
-	fn add(repo: String, version: Option<String>, arch: Arch) -> Result<Self> {
-		let version = gh_dl!(&repo, version, arch.into())?;
+	fn add(name: &str, repo: String, version: Option<String>, arch: Arch) -> Result<Self> {
+		let version = gh_dl!(name, &repo, version, arch.into())?;
 		Ok(Self { repo, version })
 	}
 
 	/// Update the plugin to the latest version.
 	/// Return `true` if the version is updated.
-	fn update(&mut self, arch: Arch) -> Result<bool> {
-		let version = gh_dl!(&self.repo, None, arch.into(), self.version.clone())?;
+	fn update(&mut self, name: &str, arch: Arch) -> Result<bool> {
+		let version = gh_dl!(name, &self.repo, None, arch.into(), self.version.clone())?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)
@@ -108,7 +108,7 @@ impl Config {
 		if let Entry::Vacant(e) = self.plugins.entry(name.clone()) {
 			kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 			let version = &e
-				.insert(Plugin::add(repo, version, self.arch.clone())?)
+				.insert(Plugin::add(&name, repo, version, self.arch.clone())?)
 				.version;
 			add!("{}@{}", name, version);
 			start_ptr().unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
@@ -123,7 +123,7 @@ impl Config {
 		kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for name in names {
 			if let Some(plugin) = self.plugins.get_mut(&name) {
-				match plugin.update(self.arch.clone()) {
+				match plugin.update(&name, self.arch.clone()) {
 					Ok(updated) => {
 						if updated {
 							add!("{}@{}", name, plugin.version)
@@ -143,7 +143,7 @@ impl Config {
 	pub fn update_all(&mut self) {
 		kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for (name, plugin) in &mut self.plugins {
-			match plugin.update(self.arch.clone()) {
+			match plugin.update(name, self.arch.clone()) {
 				Ok(updated) => {
 					if updated {
 						add!("{}@{}", name, plugin.version)
@@ -182,6 +182,7 @@ impl Config {
 		kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for (name, plugin) in &self.plugins {
 			match Plugin::add(
+				name,
 				plugin.repo.clone(),
 				Some(plugin.version.clone()),
 				self.arch.clone(),
