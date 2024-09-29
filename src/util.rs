@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, ACCEPT, USER_AGENT};
 use serde::Deserialize;
@@ -82,7 +82,7 @@ pub fn gh_dl(
 		.assets
 		.iter()
 		.find(|a| a.name.contains(arch))
-		.expect("No asset found for the current architecture");
+		.ok_or(anyhow!("No asset found than contains '{}'", arch))?;
 	let (url, name) = (&asset.browser_download_url, &asset.name);
 	let res = Client::new().get(url).send()?;
 
@@ -100,6 +100,7 @@ fn extract_zip(zip_path: &Path, output_dir: &Path, root_name: &str) -> Result<()
 	let file = File::open(zip_path)?;
 	let mut archive = ZipArchive::new(file)?;
 
+	// extract all files and keep the directory structure
 	for i in 0..archive.len() {
 		let mut file = archive.by_index(i)?;
 		let out_path = Path::new(output_dir).join(file.name());
@@ -117,9 +118,12 @@ fn extract_zip(zip_path: &Path, output_dir: &Path, root_name: &str) -> Result<()
 		}
 	}
 
+	let extracted_root = output_dir.join(archive.by_index(0)?.name());
 	let root_path = output_dir.join(root_name);
-	if !root_path.exists() {
-		fs::rename(output_dir.join(archive.by_index(0)?.name()), &root_path)?;
+	if extracted_root != root_path {
+		// extracting to a different directory means we're not done polling for file access during extracting.
+		polling::remove_dir_all(&root_path)?;
+		fs::rename(extracted_root, &root_path)?;
 	}
 
 	Ok(())
