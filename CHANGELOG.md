@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.4.1]
+
+### Fixed
+
+- Fixed extracting plugin with different folder name.
+
 ## [0.4.0]
 
 ### Added
