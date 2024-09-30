@@ -118,11 +118,13 @@ fn extract_zip(zip_path: &Path, output_dir: &Path, root_name: &str) -> Result<()
 		}
 	}
 
-	let extracted_root = output_dir.join(archive.by_index(0)?.name());
+	let extracted_root = output_dir.join(archive.by_index(0)?.name().split('/').next().unwrap());
 	let root_path = output_dir.join(root_name);
 	if extracted_root != root_path {
 		// extracting to a different directory means we're not done polling for file access during extracting.
-		polling::remove_dir_all(&root_path)?;
+		if root_path.exists() {
+			polling::remove_dir_all(&root_path)?;
+		}
 		fs::rename(extracted_root, &root_path)?;
 	}
 
