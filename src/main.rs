@@ -68,7 +68,7 @@ enum TopCommand {
 	/// Import plugins from configuration file.
 	Import {
 		#[clap(short, long)]
-		/// Dry run, can be used to update the configuration file.
+		/// Update the configuration file without downloading the plugin
 		dry_run: bool,
 	},
 

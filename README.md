@@ -122,7 +122,11 @@ Usage: ptr.exe list
 This reads the configuration file at `%APPDATA%\Local\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml`.
 
 ```
-Usage: ptr.exe import
+Usage: ptr.exe import [OPTIONS]
+
+Options:
+  -d, --dry-run  Update the configuration file without downloading the plugin
+  -h, --help     Print help
 ```
 
 ## Why Rust?
