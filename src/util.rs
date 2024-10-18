@@ -4,8 +4,8 @@ use reqwest::header::{HeaderMap, ACCEPT, USER_AGENT};
 use serde::Deserialize;
 use std::fs::{self, File};
 use std::io::{self, Write};
-use std::mem;
-use std::path::Path;
+use std::{env, mem};
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use zip::ZipArchive;
 
@@ -81,7 +81,10 @@ pub fn gh_dl(
 	let asset = &res
 		.assets
 		.iter()
-		.find(|a| a.name.contains(arch))
+		.find(|a|
+			(a.name.contains(arch) || a.name.contains(&arch.to_uppercase()))
+				&& a.name.ends_with(".zip")
+		)
 		.ok_or(anyhow!("No asset found than contains '{}'", arch))?;
 	let (url, name) = (&asset.browser_download_url, &asset.name);
 	let res = Client::new().get(url).send()?;
@@ -169,9 +172,25 @@ pub fn kill_ptr() -> Result<()> {
 }
 
 pub fn start_ptr() -> Result<()> {
-	let c = Command::new("C:\\Program Files\\PowerToys\\PowerToys.exe").spawn()?;
+	let powertoys_path = get_powertoys_path()?;
+	let c = Command::new(powertoys_path).spawn()?;
 	mem::forget(c);
 	Ok(())
+}
+
+fn get_powertoys_path() -> Result<String> {
+	let possible_paths = [
+		PathBuf::from(r"C:\Program Files\PowerToys\PowerToys.exe"),
+		env::var("LOCALAPPDATA")
+			.map(|app_data| PathBuf::from(app_data).join(r"PowerToys\PowerToys.exe"))
+			.unwrap_or_else(|_| PathBuf::new()),
+	];
+	for path in &possible_paths {
+		if path.exists() {
+			return Ok(path.to_path_buf().to_string_lossy().to_string());
+		}
+	}
+	Err(anyhow!("PowerToys executable not found in any of the expected locations"))
 }
 
 #[macro_export]

@@ -69,6 +69,10 @@ enum TopCommand {
 	#[clap(visible_alias = "i")]
 	/// Import plugins from configuration file.
 	Import,
+
+	#[clap()]
+	/// Restart PowerToys
+	Restart,
 }
 
 fn get_styles() -> clap::builder::Styles {
@@ -101,6 +105,7 @@ fn main() {
 			TopCommand::Remove { name } => config.remove(name),
 			TopCommand::List => print!("{}", config),
 			TopCommand::Import => config.import(),
+			TopCommand::Restart => config.restart(),
 		},
 		Err(e) => exit!(e),
 	}

@@ -34,6 +34,7 @@ impl From<Arch> for &str {
 		match val {
 			Arch::X64 => "x64",
 			Arch::ARM64 => "arm64",
+
 		}
 	}
 }
@@ -102,6 +103,11 @@ impl Config {
 	fn save(&self) -> Result<()> {
 		fs::write(&*CONFIG_PATH, toml::to_string(self)?)?;
 		Ok(())
+	}
+
+	pub fn restart(&self) {
+		kill_ptr().unwrap_or_else(|e| println!("Failed to kill PowerToys: {}", e));
+		start_ptr().unwrap_or_else(|e| exit!("Failed to start PowerToys: {}", e));
 	}
 
 	pub fn add(&mut self, name: String, repo: String, version: Option<String>) -> Result<()> {
