@@ -11,7 +11,7 @@
 
 - Support `ARM64` along with `arm64` in the archive name.
 - Check for `.zip` file extension in the archive name.
-- Only import plugins field on `import` command.
+- Only check plugins field on `import` command.
 
 ## [0.4.2]
 
