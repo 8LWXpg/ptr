@@ -68,7 +68,11 @@ enum TopCommand {
 
 	#[clap(visible_alias = "i")]
 	/// Import plugins from configuration file.
-	Import,
+	Import {
+		#[clap(short, long)]
+		/// Dry run, can be used to update the configuration file.
+		dry_run: bool,
+	},
 
 	#[clap()]
 	/// Restart PowerToys
@@ -88,25 +92,37 @@ fn get_styles() -> clap::builder::Styles {
 
 fn main() {
 	let args = App::parse();
-	match config::Config::new() {
-		Ok(mut config) => match args.cmd {
-			TopCommand::Add {
-				name,
-				repo,
-				version,
-			} => config.add(name, repo, version).unwrap_or_else(|e| exit!(e)),
-			TopCommand::Update { name, all } => {
-				if all {
-					config.update_all();
+	match args.cmd {
+		TopCommand::Import { dry_run } => match config::Config::import() {
+			Ok(mut config) => {
+				if dry_run {
+					config.save().unwrap_or_else(|e| exit!(e));
 				} else {
-					config.update(name);
+					config.import_plugins();
 				}
 			}
-			TopCommand::Remove { name } => config.remove(name),
-			TopCommand::List => print!("{}", config),
-			TopCommand::Import => config.import(),
-			TopCommand::Restart => config.restart(),
+			Err(e) => exit!(e),
 		},
-		Err(e) => exit!(e),
+		_ => match config::Config::new() {
+			Ok(mut config) => match args.cmd {
+				TopCommand::Add {
+					name,
+					repo,
+					version,
+				} => config.add(name, repo, version).unwrap_or_else(|e| exit!(e)),
+				TopCommand::Update { name, all } => {
+					if all {
+						config.update_all();
+					} else {
+						config.update(name);
+					}
+				}
+				TopCommand::Remove { name } => config.remove(name),
+				TopCommand::List => print!("{}", config),
+				TopCommand::Restart => config.restart(),
+				_ => unreachable!(),
+			},
+			Err(e) => exit!(e),
+		},
 	}
 }

@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.5.0]
+
+### Added
+
+- Added `pt_path` field in the configuration file to specify the path to PowerToys installation. **(Breaking Change)**
+- Added `--dry-run (-d)` flag in `import` command to only update the configuration file without downloading the plugin, useful when config file spec is changed.
+
+### Changed
+
+- Support `ARM64` along with `arm64` in the archive name.
+- Check for `.zip` file extension in the archive name.
+- Only import plugins field on `import` command.
+
 ## [0.4.2]
 
 ### Fixed
