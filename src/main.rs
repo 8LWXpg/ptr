@@ -3,17 +3,15 @@ mod polling;
 mod util;
 
 use clap::{builder::styling, Parser, Subcommand};
-use std::{path::PathBuf, sync::LazyLock};
+use std::{env, path::PathBuf, sync::LazyLock};
 
 static PLUGIN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-	home::home_dir()
-		.unwrap()
-		.join("AppData/Local/Microsoft/PowerToys/PowerToys Run/Plugins")
+	PathBuf::from(&env::var("LOCALAPPDATA").unwrap())
+		.join(r"Microsoft\PowerToys\PowerToys Run\Plugins")
 });
 static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-	home::home_dir()
-		.unwrap()
-		.join("AppData/Local/Microsoft/PowerToys/PowerToys Run/Plugins/version.toml")
+	PathBuf::from(&env::var("LOCALAPPDATA").unwrap())
+		.join(r"Microsoft\PowerToys\PowerToys Run\Plugins\version.toml")
 });
 
 #[derive(Parser)]

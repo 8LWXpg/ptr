@@ -7,7 +7,6 @@ edition = "2021"
 anyhow = "1.0.86"
 clap = { version = "4.5.11", features = ["derive"] }
 colored = "2.1.0"
-home = "0.5.9"
 reqwest = { version = "0.12.5", features = ["blocking", "json", "stream"] }
 serde = { version = "1.0.207", features = ["derive"] }
 tabwriter = { version = "1.4.0", features = ["ansi_formatting"] }
