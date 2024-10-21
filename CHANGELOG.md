@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.6.0]
+
+### Added
+
+- Added `--version` flag in `update` command to specify the version of the plugin to update.
+
 ## [0.5.0]
 
 ### Added

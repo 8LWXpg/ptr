@@ -23,6 +23,14 @@ struct Assets {
 	name: String,
 	browser_download_url: String,
 }
+
+impl Assets {
+	fn match_name(&self, arch: &str) -> bool {
+		(self.name.contains(arch) || self.name.contains(&arch.to_uppercase()))
+			&& self.name.ends_with(".zip")
+	}
+}
+
 #[macro_export]
 macro_rules! gh_dl {
 	($root_name:expr, $repo:expr, $version:expr, $arch:expr) => {
@@ -82,10 +90,7 @@ pub fn gh_dl(
 	let asset = &res
 		.assets
 		.iter()
-		.find(|a| {
-			(a.name.contains(arch) || a.name.contains(&arch.to_uppercase()))
-				&& a.name.ends_with(".zip")
-		})
+		.find(|a| a.match_name(arch))
 		.ok_or(anyhow!("No asset found than contains '{}'", arch))?;
 	let (url, name) = (&asset.browser_download_url, &asset.name);
 	let res = Client::new().get(url).send()?;
