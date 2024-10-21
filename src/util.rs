@@ -25,7 +25,7 @@ struct Assets {
 }
 
 impl Assets {
-	fn match_name(&self, arch: &str) -> bool {
+	fn is_arch(&self, arch: &str) -> bool {
 		(self.name.contains(arch) || self.name.contains(&arch.to_uppercase()))
 			&& self.name.ends_with(".zip")
 	}
@@ -90,7 +90,7 @@ pub fn gh_dl(
 	let asset = &res
 		.assets
 		.iter()
-		.find(|a| a.match_name(arch))
+		.find(|a| a.is_arch(arch))
 		.ok_or(anyhow!("No asset found than contains '{}'", arch))?;
 	let (url, name) = (&asset.browser_download_url, &asset.name);
 	let res = Client::new().get(url).send()?;
