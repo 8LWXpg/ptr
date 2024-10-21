@@ -88,11 +88,35 @@ impl Config {
 		}
 	}
 
-	pub fn update(&mut self, names: Vec<String>) {
+	pub fn update(&mut self, names: Vec<String>, versions: Option<Vec<String>>) {
 		kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
-		for name in names {
-			if let Some(plugin) = self.plugins.get_mut(&name) {
-				match plugin.update(&name, self.arch.clone()) {
+
+		// Update plugins with versions first.
+		let without_versions = if let Some(versions) = versions {
+			let (with_versions, without_versions) = names
+				.split_at_checked(versions.len())
+				.unwrap_or((&names, &[]));
+			for (name, version) in with_versions.iter().zip(versions) {
+				if let Some(plugin) = self.plugins.get_mut(name) {
+					match plugin.update_to(name, self.arch.clone(), version) {
+						Ok(updated) => {
+							if updated {
+								add!("{}@{}", name, plugin.version)
+							} else {
+								up_to_date!("{}@{}", name, plugin.version)
+							}
+						}
+						Err(e) => error!("Failed to update {}: {}", name, e),
+					}
+				}
+			}
+			without_versions
+		} else {
+			&names
+		};
+		for name in without_versions {
+			if let Some(plugin) = self.plugins.get_mut(name) {
+				match plugin.update(name, self.arch.clone()) {
 					Ok(updated) => {
 						if updated {
 							add!("{}@{}", name, plugin.version)
@@ -237,6 +261,24 @@ impl Plugin {
 	/// Return `true` if the version is updated.
 	fn update(&mut self, name: &str, arch: Arch) -> Result<bool> {
 		let version = gh_dl!(name, &self.repo, None, arch.into(), self.version.clone())?;
+		if version != self.version {
+			self.version = version;
+			Ok(true)
+		} else {
+			Ok(false)
+		}
+	}
+
+	/// Update the plugin to specific version.
+	/// Return `true` if the version is updated.
+	fn update_to(&mut self, name: &str, arch: Arch, version: String) -> Result<bool> {
+		let version = gh_dl!(
+			name,
+			&self.repo,
+			Some(version),
+			arch.into(),
+			self.version.clone()
+		)?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)

@@ -50,6 +50,9 @@ enum TopCommand {
 		#[clap(short, long)]
 		/// Update all plugins.
 		all: bool,
+		#[clap(short, long)]
+		/// Version to update to.
+		version: Option<Vec<String>>,
 	},
 
 	#[clap(visible_alias = "r", arg_required_else_help = true)]
@@ -108,11 +111,11 @@ fn main() {
 					repo,
 					version,
 				} => config.add(name, repo, version).unwrap_or_else(|e| exit!(e)),
-				TopCommand::Update { name, all } => {
+				TopCommand::Update { name, all, version } => {
 					if all {
 						config.update_all();
 					} else {
-						config.update(name);
+						config.update(name, version);
 					}
 				}
 				TopCommand::Remove { name } => config.remove(name),

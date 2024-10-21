@@ -85,13 +85,18 @@ Arguments:
   [NAME]...  The name of the plugins to update
 
 Options:
-  -a, --all   Update all plugins
-  -h, --help  Print help
+  -a, --all                Update all plugins
+  -v, --version <VERSION>  Version to update to
+  -h, --help               Print help
 ```
 
 e.g.
 ```
 ptr u -a
+```
+
+```
+ptr u Plugin1 Plugin2 -v v1.1.0 -v 1.2.0
 ```
 
 ### Remove

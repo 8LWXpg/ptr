@@ -51,7 +51,7 @@ pub fn gh_dl(
 	arch: &str,
 	current_version: Option<String>,
 ) -> Result<String> {
-	let url = if let Some(version) = version {
+	let url = if let Some(version) = version.as_ref() {
 		format!(
 			"https://api.github.com/repos/{}/releases/tags/{}",
 			repo, version
@@ -66,7 +66,8 @@ pub fn gh_dl(
 	let res = Client::new().get(&url).headers(headers).send()?;
 	if !res.status().is_success() {
 		bail!(
-			"Failed to fetch the latest release: {}",
+			"Failed to fetch {}: {}",
+			&version.unwrap_or("latest".to_string()),
 			res.status().canonical_reason().unwrap_or("Unknown"),
 		);
 	}
