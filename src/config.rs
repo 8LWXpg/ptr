@@ -44,7 +44,7 @@ impl Config {
 			let pt_path = get_powertoys_path()?;
 			Ok(Self {
 				arch: Arch::default(),
-				pt_path: pt_path.into(),
+				pt_path,
 				plugins: HashMap::new(),
 			})
 		}
@@ -57,7 +57,7 @@ impl Config {
 			toml::from_str(&fs::read_to_string(&*CONFIG_PATH).unwrap())?;
 		Ok(Self {
 			arch: Arch::default(),
-			pt_path: pt_path.into(),
+			pt_path,
 			plugins: import_config.plugins,
 		})
 	}
@@ -219,7 +219,7 @@ impl fmt::Display for Config {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-enum Arch {
+pub enum Arch {
 	#[serde(rename = "x64")]
 	X64,
 	#[serde(rename = "arm64")]
@@ -245,6 +245,15 @@ impl From<Arch> for &str {
 	}
 }
 
+impl fmt::Display for Arch {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			Arch::X64 => write!(f, "x64"),
+			Arch::ARM64 => write!(f, "arm64"),
+		}
+	}
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 struct Plugin {
 	repo: String,
@@ -253,14 +262,14 @@ struct Plugin {
 
 impl Plugin {
 	fn add(name: &str, repo: String, version: Option<String>, arch: Arch) -> Result<Self> {
-		let version = gh_dl!(name, &repo, version, arch.into())?;
+		let version = gh_dl!(name, &repo, version, &arch)?;
 		Ok(Self { repo, version })
 	}
 
 	/// Update the plugin to the latest version.
 	/// Return `true` if the version is updated.
 	fn update(&mut self, name: &str, arch: Arch) -> Result<bool> {
-		let version = gh_dl!(name, &self.repo, None, arch.into(), self.version.clone())?;
+		let version = gh_dl!(name, &self.repo, None, &arch, self.version.clone())?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)
@@ -272,13 +281,7 @@ impl Plugin {
 	/// Update the plugin to specific version.
 	/// Return `true` if the version is updated.
 	fn update_to(&mut self, name: &str, arch: Arch, version: String) -> Result<bool> {
-		let version = gh_dl!(
-			name,
-			&self.repo,
-			Some(version),
-			arch.into(),
-			self.version.clone()
-		)?;
+		let version = gh_dl!(name, &self.repo, Some(version), &arch, self.version.clone())?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)

@@ -9,6 +9,7 @@ use std::process::Command;
 use std::{env, mem};
 use zip::ZipArchive;
 
+use crate::config::Arch;
 use crate::polling;
 use crate::PLUGIN_PATH;
 
@@ -25,7 +26,10 @@ struct Assets {
 }
 
 impl Assets {
-	fn is_arch(&self, arch: &str) -> bool {
+	/// Currently match for upper and lower case arch names.
+	///
+	fn is_arch(&self, arch: &Arch) -> bool {
+		let arch = &arch.to_string();
 		(self.name.contains(arch) || self.name.contains(&arch.to_uppercase()))
 			&& self.name.ends_with(".zip")
 	}
@@ -47,7 +51,7 @@ macro_rules! gh_dl {
 ///
 /// * `repo` - The repository to download from.
 /// * `version` - The tagged version of the repository to download.
-/// * `arch` - The architecture of the system.
+/// * `arch` - The architecture of the system, either x64 or arm64.
 /// * `current_version` - The current version of the repository that is installed.
 ///
 /// # Returns
@@ -56,7 +60,7 @@ pub fn gh_dl(
 	root_name: &str,
 	repo: &str,
 	version: Option<String>,
-	arch: &str,
+	arch: &Arch,
 	current_version: Option<String>,
 ) -> Result<String> {
 	let url = if let Some(version) = version.as_ref() {
@@ -91,7 +95,7 @@ pub fn gh_dl(
 		.assets
 		.iter()
 		.find(|a| a.is_arch(arch))
-		.ok_or(anyhow!("No asset found than contains '{}'", arch))?;
+		.ok_or(anyhow!("No asset found that contains '{}'", arch))?;
 	let (url, name) = (&asset.browser_download_url, &asset.name);
 	let res = Client::new().get(url).send()?;
 
@@ -183,21 +187,19 @@ pub fn start_ptr(powertoys_path: &Path) -> Result<()> {
 	Ok(())
 }
 
-pub fn get_powertoys_path() -> Result<String> {
+pub fn get_powertoys_path() -> Result<PathBuf> {
 	let possible_paths = [
 		PathBuf::from(r"C:\Program Files\PowerToys\PowerToys.exe"),
 		env::var("LOCALAPPDATA")
 			.map(|app_data| PathBuf::from(app_data).join(r"PowerToys\PowerToys.exe"))
-			.unwrap_or_else(|_| PathBuf::new()),
+			.unwrap_or_default(),
 	];
-	for path in &possible_paths {
+	for path in possible_paths {
 		if path.exists() {
-			return Ok(path.to_path_buf().to_string_lossy().to_string());
+			return Ok(path);
 		}
 	}
-	Err(anyhow!(
-		"PowerToys executable not found in any of the expected locations"
-	))
+	bail!("PowerToys executable not found in any of the expected locations")
 }
 
 #[macro_export]
