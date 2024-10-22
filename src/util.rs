@@ -258,12 +258,8 @@ macro_rules! error {
 /// Print a error message to stderr and exit with code 0.
 #[macro_export]
 macro_rules! exit {
-    ($msg:expr) => {{
-        $crate::error!($msg);
-        std::process::exit(0);
-    }};
-    ($fmt:expr, $($arg:tt)*) => {{
-        $crate::error!($fmt, $($arg)*);
+    ($($arg:tt)*) => {{
+        $crate::error!($($arg)*);
         std::process::exit(0);
     }};
 }
