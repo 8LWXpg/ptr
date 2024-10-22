@@ -203,44 +203,38 @@ pub fn get_powertoys_path() -> Result<PathBuf> {
 }
 
 #[macro_export]
-macro_rules! tabwriter {
-    ($fmt:expr, $($arg:tt)*) => {{
-        use std::io::Write;
-        use colored::Colorize;
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        write!(&mut tw, $fmt, $($arg)*).expect("Failed to write to TabWriter");
-        tw.flush().expect("Failed to flush TabWriter");
-        println!("{}", String::from_utf8(tw.into_inner().unwrap()).unwrap());
-    }};
-}
-
-#[macro_export]
 macro_rules! print_message {
     ($symbol:expr, $color:ident, $msg:expr) => {
-        $crate::tabwriter!("{} {}", $symbol.$color().bold(), $msg)
+        println!("{} {}", $symbol.$color().bold(), $msg)
     };
     ($symbol:expr, $color:ident, $fmt:expr, $($arg:tt)*) => {
-        $crate::tabwriter!("{} {}", $symbol.$color().bold(), format!($fmt, $($arg)*))
+        println!("{} {}", $symbol.$color().bold(), format!($fmt, $($arg)*))
     };
 }
 
-/// print message for adding an item.
+/// Print message for adding an item.
+///
+/// Works like `println!`.
 #[macro_export]
 macro_rules! add {
-    ($($arg:tt)*) => {
-        $crate::print_message!("+", bright_green, $($arg)*)
+	($($arg:tt)*) => {
+		$crate::print_message!("+", bright_green, $($arg)*)
     };
 }
 
 /// print message for item that is up to date.
+///
+/// Works like `println!`.
 #[macro_export]
 macro_rules! up_to_date {
-    ($($arg:tt)*) => {
-        $crate::print_message!("=", bright_blue, $($arg)*)
+	($($arg:tt)*) => {
+		$crate::print_message!("=", bright_blue, $($arg)*)
     };
 }
 
 /// print message for removing an item.
+///
+/// Works like `println!`.
 #[macro_export]
 macro_rules! remove {
     ($($arg:tt)*) => {
