@@ -77,7 +77,7 @@ impl Config {
 		if let Entry::Vacant(e) = self.plugins.entry(name.clone()) {
 			kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 			let version = &e
-				.insert(Plugin::add(&name, repo, version, self.arch.clone())?)
+				.insert(Plugin::add(&name, repo, version, &self.arch)?)
 				.version;
 			add!("{}@{}", name, version);
 			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
@@ -174,12 +174,7 @@ impl Config {
 		let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
 		kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for (name, plugin) in &self.plugins {
-			match Plugin::add(
-				name,
-				plugin.repo.clone(),
-				Some(plugin.version.clone()),
-				self.arch.clone(),
-			) {
+			match Plugin::add(name, plugin.repo.clone(), None, &self.arch) {
 				Ok(plugin) => {
 					add!("{}@{}", name, &plugin.version);
 					new_plugins.insert(name.clone(), plugin);
@@ -261,8 +256,9 @@ struct Plugin {
 }
 
 impl Plugin {
-	fn add(name: &str, repo: String, version: Option<String>, arch: Arch) -> Result<Self> {
-		let version = gh_dl!(name, &repo, version, &arch)?;
+	/// Add a plugin with the specified version, None for the latest version.
+	fn add(name: &str, repo: String, version: Option<String>, arch: &Arch) -> Result<Self> {
+		let version = gh_dl!(name, &repo, version, arch)?;
 		Ok(Self { repo, version })
 	}
 

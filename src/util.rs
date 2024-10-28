@@ -64,12 +64,9 @@ pub fn gh_dl(
 	current_version: Option<String>,
 ) -> Result<String> {
 	let url = if let Some(version) = version.as_ref() {
-		format!(
-			"https://api.github.com/repos/{}/releases/tags/{}",
-			repo, version
-		)
+		format!("https://api.github.com/repos/{repo}/releases/tags/{version}")
 	} else {
-		format!("https://api.github.com/repos/{}/releases/latest", repo)
+		format!("https://api.github.com/repos/{repo}/releases/latest")
 	};
 	let mut headers = HeaderMap::new();
 	headers.insert(USER_AGENT, "reqwest".parse().unwrap());
@@ -131,7 +128,14 @@ fn extract_zip(zip_path: &Path, output_dir: &Path, root_name: &str) -> Result<()
 		}
 	}
 
-	let extracted_root = output_dir.join(archive.by_index(0)?.name().split('/').next().unwrap());
+	let extracted_root = output_dir.join(
+		archive
+			.by_index(0)?
+			.name()
+			.split(['/', '\\'])
+			.next()
+			.unwrap(),
+	);
 	let root_path = output_dir.join(root_name);
 	if extracted_root != root_path {
 		// extracting to a different directory means we're not done polling for file access during extraction.

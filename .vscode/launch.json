@@ -20,8 +20,7 @@
                 }
             },
             "args": [
-                "r",
-                "GitHubRepo",
+                "i",
             ],
             "cwd": "${workspaceFolder}"
         },
