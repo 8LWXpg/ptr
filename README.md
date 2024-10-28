@@ -27,7 +27,7 @@ cargo install --git https://github.com/8LWXpg/ptr.git
 If you have any suggestions for these limitations, feel free to open an issue.
 
 - This tool only supports plugins hosted on GitHub.
-- The plugin release must be a zip file with either `x64` or `arm64` in the file name.
+- The plugin release must be a zip file with either `x64` or `arm64` in the file name, or the tool will prompt you to specify the asset.
 - The zip structure must be like this:
   ```
   something-x64.zip
