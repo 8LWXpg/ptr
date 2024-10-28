@@ -1,5 +1,16 @@
 # Change Log
 
+## [unreleased]
+
+### Added
+
+- Added manual select fallback if assets matching failed.
+
+### Fixed
+
+- Fixed extracting plugin zip file with backslashes in the path.
+- Ignore version when importing plugin.
+
 ## [0.6.0]
 
 ### Added

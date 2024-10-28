@@ -1,4 +1,5 @@
 use anyhow::{anyhow, bail, Result};
+use colored::Colorize;
 use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, ACCEPT, USER_AGENT};
 use serde::Deserialize;
@@ -88,11 +89,11 @@ pub fn gh_dl(
 		}
 	}
 
-	let asset = &res
-		.assets
-		.iter()
-		.find(|a| a.is_arch(arch))
-		.ok_or(anyhow!("No asset found that contains '{}'", arch))?;
+	let assets = res.assets;
+	let asset = match assets.iter().find(|a| a.is_arch(arch)) {
+		Some(asset) => asset,
+		None => manual_select(&assets)?,
+	};
 	let (url, name) = (&asset.browser_download_url, &asset.name);
 	let res = Client::new().get(url).send()?;
 
@@ -104,6 +105,21 @@ pub fn gh_dl(
 	fs::remove_file(&file_path)?;
 
 	Ok(tag)
+}
+
+fn manual_select(assets: &[Assets]) -> Result<&Assets> {
+	if assets.len() == 1 {
+		return Ok(&assets[0]);
+	}
+
+	println!("Fail to match assets, please select one:");
+	for (i, asset) in assets.iter().enumerate() {
+		println!("{}: {}", i.to_string().bright_yellow(), asset.name);
+	}
+	let mut input = String::new();
+	io::stdin().read_line(&mut input)?;
+	let index = input.trim().parse::<usize>()?;
+	assets.get(index).ok_or(anyhow!("Invalid index"))
 }
 
 fn extract_zip(zip_path: &Path, output_dir: &Path, root_name: &str) -> Result<()> {
