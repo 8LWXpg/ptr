@@ -40,7 +40,7 @@ For more general pattern matching and downloading, check another tool I wrote: [
 
 ## Usage
 
-This tool will create a file at `%APPDATA%\Local\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml` to store installed plugins.
+This tool will create a file at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml` to store installed plugins.
 
 ```
 Usage: ptr.exe <COMMAND>
@@ -126,7 +126,7 @@ Usage: ptr.exe list
 
 ### Import
 
-This reads the configuration file at `%APPDATA%\Local\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml`.
+This reads the configuration file at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml`.
 
 ```
 Usage: ptr.exe import [OPTIONS]
