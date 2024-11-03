@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.7.1]
+
+### Fixed
+
+- Prompt for path if PowerToys installation path is not found.
+
 ## [0.7.0]
 
 ### Added
