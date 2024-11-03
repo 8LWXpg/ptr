@@ -112,13 +112,10 @@ fn manual_select(assets: &[Assets]) -> Result<&Assets> {
 		return Ok(&assets[0]);
 	}
 
-	println!("Fail to match assets, please select one:");
 	for (i, asset) in assets.iter().enumerate() {
 		println!("{}: {}", i.to_string().bright_yellow(), asset.name);
 	}
-	let mut input = String::new();
-	io::stdin().read_line(&mut input)?;
-	let index = input.trim().parse::<usize>()?;
+	let index = prompt("Fail to match assets, please select one: ")?.parse::<usize>()?;
 	assets.get(index).ok_or(anyhow!("Invalid index"))
 }
 
@@ -219,7 +216,17 @@ pub fn get_powertoys_path() -> Result<PathBuf> {
 			return Ok(path);
 		}
 	}
-	bail!("PowerToys executable not found in any of the expected locations")
+	prompt("PowerToys executable not found in any of the expected locations\nEnter path: ")
+		.map(|s| s.into())
+}
+
+/// Prompt the user for string input.
+fn prompt(msg: &str) -> Result<String> {
+	let mut input = String::new();
+	print!("{msg}");
+	io::stdout().flush()?;
+	io::stdin().read_line(&mut input)?;
+	Ok(input.trim().to_string())
 }
 
 #[macro_export]
