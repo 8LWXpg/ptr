@@ -101,7 +101,7 @@ pub fn gh_dl(
 	let mut file = File::create(&file_path)?;
 	file.write_all(&res.bytes()?)?;
 
-	extract_zip(&file_path, &PLUGIN_PATH, root_name)?;
+	extract_zip(&file_path, root_name)?;
 	fs::remove_file(&file_path)?;
 
 	Ok(tag)
@@ -119,41 +119,33 @@ fn manual_select(assets: &[Assets]) -> Result<&Assets> {
 	assets.get(index).ok_or(anyhow!("Invalid index"))
 }
 
-fn extract_zip(zip_path: &Path, output_dir: &Path, root_name: &str) -> Result<()> {
-	let file = File::open(zip_path)?;
-	let mut archive = ZipArchive::new(file)?;
+fn extract_zip(zip_path: &Path, root_name: &str) -> Result<()> {
+	let mut archive = ZipArchive::new(File::open(zip_path)?)?;
+	env::set_current_dir(&*PLUGIN_PATH)?;
+
+	// locate for .dll file and find it's parent
+	let dll = archive
+		.file_names()
+		.find(|f| f.ends_with(".dll"))
+		.ok_or(anyhow!("No .dll file found"))?
+		.to_owned();
+	let parent = Path::new(&dll).parent().unwrap_or(Path::new(""));
 
 	// extract all files and keep the directory structure
+	let root = PathBuf::from(root_name);
 	for i in 0..archive.len() {
 		let mut file = archive.by_index(i)?;
-		let out_path = output_dir.join(file.name());
+		let out_path = root.join(Path::new(file.name()).strip_prefix(parent)?);
 
 		if file.is_dir() {
-			fs::create_dir_all(&out_path)?;
+			fs::create_dir_all(out_path)?;
 		} else {
 			if let Some(p) = out_path.parent() {
 				fs::create_dir_all(p)?;
 			}
-			let mut out_file = File::create(&out_path)?;
+			let mut out_file = File::create(out_path)?;
 			polling::copy(&mut file, &mut out_file)?;
 		}
-	}
-
-	let extracted_root = output_dir.join(
-		archive
-			.by_index(0)?
-			.name()
-			.split(['/', '\\'])
-			.next()
-			.unwrap(),
-	);
-	let root_path = output_dir.join(root_name);
-	if extracted_root != root_path {
-		// extracting to a different directory means we're not done polling for file access during extraction.
-		if root_path.exists() {
-			polling::remove_dir_all(&root_path)?;
-		}
-		fs::rename(extracted_root, &root_path)?;
 	}
 
 	Ok(())
