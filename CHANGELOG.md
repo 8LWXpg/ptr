@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.8.0]
+
+### Changed
+
+- Support different zip structure
+- Use `%ProgramFiles%` in PowerToys executable lookup.
+
 ## [0.7.1]
 
 ### Fixed

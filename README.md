@@ -32,6 +32,7 @@ If you have any suggestions for these limitations, feel free to open an issue.
   ```
   something-x64.zip
   └── anyPluginName
+      |   plugin.dll
       └── plugin files...
   ```
 
