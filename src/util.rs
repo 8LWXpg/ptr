@@ -196,11 +196,10 @@ pub fn start_ptr(powertoys_path: &Path) -> Result<()> {
 
 pub fn get_powertoys_path() -> Result<PathBuf> {
 	let possible_paths = [
-		PathBuf::from(r"C:\Program Files\PowerToys\PowerToys.exe"),
-		env::var("LOCALAPPDATA")
-			.map(|app_data| PathBuf::from(app_data).join(r"PowerToys\PowerToys.exe"))
-			.unwrap_or_default(),
-	];
+		PathBuf::from(env::var("ProgramFiles").unwrap_or_default()),
+		PathBuf::from(env::var("LOCALAPPDATA").unwrap_or_default()),
+	]
+	.map(|p| p.join(r"PowerToys\PowerToys.exe"));
 	for path in possible_paths {
 		if path.exists() {
 			return Ok(path);
