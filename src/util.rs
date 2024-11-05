@@ -126,15 +126,13 @@ fn extract_zip(zip_path: &Path, output_dir: &Path, root_name: &str) -> Result<()
 	// extract all files and keep the directory structure
 	for i in 0..archive.len() {
 		let mut file = archive.by_index(i)?;
-		let out_path = Path::new(output_dir).join(file.name());
+		let out_path = output_dir.join(file.name());
 
-		if (file.name()).ends_with('/') {
+		if file.is_dir() {
 			fs::create_dir_all(&out_path)?;
 		} else {
 			if let Some(p) = out_path.parent() {
-				if !p.exists() {
-					fs::create_dir_all(p)?;
-				}
+				fs::create_dir_all(p)?;
 			}
 			let mut out_file = File::create(&out_path)?;
 			polling::copy(&mut file, &mut out_file)?;
