@@ -231,15 +231,6 @@ impl Default for Arch {
 	}
 }
 
-impl From<Arch> for &str {
-	fn from(val: Arch) -> Self {
-		match val {
-			Arch::X64 => "x64",
-			Arch::ARM64 => "arm64",
-		}
-	}
-}
-
 impl fmt::Display for Arch {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
