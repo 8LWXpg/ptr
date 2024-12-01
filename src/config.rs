@@ -79,7 +79,7 @@ impl Config {
 			let version = &e
 				.insert(Plugin::add(&name, repo, version, &self.arch)?)
 				.version;
-			add!("{}@{}", name, version);
+			add!(name, version);
 			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
 			self.save()?;
 			Ok(())
@@ -101,9 +101,9 @@ impl Config {
 					match plugin.update_to(name, self.arch.clone(), version) {
 						Ok(updated) => {
 							if updated {
-								add!("{}@{}", name, plugin.version)
+								add!(name, plugin.version)
 							} else {
-								up_to_date!("{}@{}", name, plugin.version)
+								up_to_date!(name, plugin.version)
 							}
 						}
 						Err(e) => error!("Failed to update {}: {}", name, e),
@@ -119,9 +119,9 @@ impl Config {
 				match plugin.update(name, self.arch.clone()) {
 					Ok(updated) => {
 						if updated {
-							add!("{}@{}", name, plugin.version)
+							add!(name, plugin.version)
 						} else {
-							up_to_date!("{}@{}", name, plugin.version)
+							up_to_date!(name, plugin.version)
 						}
 					}
 					Err(e) => error!("Failed to update {}: {}", name, e),
@@ -139,9 +139,9 @@ impl Config {
 			match plugin.update(name, self.arch.clone()) {
 				Ok(updated) => {
 					if updated {
-						add!("{}@{}", name, plugin.version)
+						add!(name, plugin.version)
 					} else {
-						up_to_date!("{}@{}", name, plugin.version)
+						up_to_date!(name, plugin.version)
 					}
 				}
 				Err(e) => error!("Failed to update {}: {}", name, e),
@@ -176,7 +176,7 @@ impl Config {
 		for (name, plugin) in &self.plugins {
 			match Plugin::add(name, plugin.repo.clone(), None, &self.arch) {
 				Ok(plugin) => {
-					add!("{}@{}", name, &plugin.version);
+					add!(name, &plugin.version);
 					new_plugins.insert(name.clone(), plugin);
 				}
 				Err(e) => exit!("Failed to import {}: {}", name, e),

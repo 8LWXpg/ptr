@@ -115,7 +115,7 @@ fn manual_select(assets: &[Assets]) -> Result<&Assets> {
 	for (i, asset) in assets.iter().enumerate() {
 		println!("{}: {}", i.to_string().bright_yellow(), asset.name);
 	}
-	let index = prompt("Fail to match assets, please select one: ")?.parse::<usize>()?;
+	let index: usize = prompt("Fail to match assets, please select one: ")?.parse()?;
 	assets.get(index).ok_or(anyhow!("Invalid index"))
 }
 
@@ -233,9 +233,9 @@ macro_rules! print_message {
 /// Works like `println!`.
 #[macro_export]
 macro_rules! add {
-	($($arg:tt)*) => {
-		$crate::print_message!("+", bright_green, $($arg)*)
-    };
+	($name:expr, $version:expr) => {
+		$crate::print_message!("+", bright_green, "{}@{}", $name, $version)
+	};
 }
 
 /// print message for item that is up to date.
@@ -243,9 +243,9 @@ macro_rules! add {
 /// Works like `println!`.
 #[macro_export]
 macro_rules! up_to_date {
-	($($arg:tt)*) => {
-		$crate::print_message!("=", bright_blue, $($arg)*)
-    };
+	($name:expr, $version:expr) => {
+		$crate::print_message!("=", bright_blue, "{}@{}", $name, $version)
+	};
 }
 
 /// print message for removing an item.
@@ -253,9 +253,9 @@ macro_rules! up_to_date {
 /// Works like `println!`.
 #[macro_export]
 macro_rules! remove {
-    ($($arg:tt)*) => {
-        $crate::print_message!("-", bright_red, $($arg)*)
-    };
+	($name:expr) => {
+		$crate::print_message!("-", bright_red, $name)
+	};
 }
 
 /// Print an error message to stderr.
