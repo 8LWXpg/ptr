@@ -20,7 +20,8 @@
                 }
             },
             "args": [
-                "i",
+                "u",
+                "-a"
             ],
             "cwd": "${workspaceFolder}"
         },

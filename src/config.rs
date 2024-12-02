@@ -8,6 +8,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use tabwriter::TabWriter;
 
+use crate::pin::Pin;
 use crate::polling;
 use crate::util::{get_powertoys_path, kill_ptr, start_ptr};
 use crate::{add, error, exit, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PATH};
@@ -16,6 +17,7 @@ use crate::{add, error, exit, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PAT
 pub struct Config {
 	arch: Arch,
 	pt_path: PathBuf,
+	pin: Pin,
 	#[serde(serialize_with = "sort_keys")]
 	plugins: HashMap<String, Plugin>,
 }
@@ -45,6 +47,7 @@ impl Config {
 			Ok(Self {
 				arch: Arch::default(),
 				pt_path,
+				pin: Pin::default(),
 				plugins: HashMap::new(),
 			})
 		}
@@ -58,6 +61,7 @@ impl Config {
 		Ok(Self {
 			arch: Arch::default(),
 			pt_path,
+			pin: Pin::default(),
 			plugins: import_config.plugins,
 		})
 	}
@@ -71,6 +75,24 @@ impl Config {
 	pub fn restart(&self) {
 		kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		start_ptr(&self.pt_path).unwrap_or_else(|e| exit!("Failed to start PowerToys: {}", e));
+	}
+
+	pub fn import_plugins(&mut self) {
+		let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
+		kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
+		for (name, plugin) in &self.plugins {
+			match Plugin::add(name, plugin.repo.clone(), None, &self.arch) {
+				Ok(plugin) => {
+					add!(name, &plugin.version);
+					new_plugins.insert(name.clone(), plugin);
+				}
+				Err(e) => exit!("Failed to import {}: {}", name, e),
+			}
+		}
+		start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+		self.plugins = new_plugins;
+		self.save()
+			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
 
 	pub fn add(&mut self, name: String, repo: String, version: Option<String>) -> Result<()> {
@@ -136,6 +158,9 @@ impl Config {
 	pub fn update_all(&mut self) {
 		kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for (name, plugin) in &mut self.plugins {
+			if self.pin.contains(name) {
+				continue;
+			}
 			match plugin.update(name, self.arch.clone()) {
 				Ok(updated) => {
 					if updated {
@@ -170,22 +195,24 @@ impl Config {
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
 
-	pub fn import_plugins(&mut self) {
-		let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
-		kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
-		for (name, plugin) in &self.plugins {
-			match Plugin::add(name, plugin.repo.clone(), None, &self.arch) {
-				Ok(plugin) => {
-					add!(name, &plugin.version);
-					new_plugins.insert(name.clone(), plugin);
-				}
-				Err(e) => exit!("Failed to import {}: {}", name, e),
-			}
-		}
-		start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
-		self.plugins = new_plugins;
+	pub fn pin_add(&mut self, names: Vec<String>) {
+		self.pin.add(names);
 		self.save()
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
+	}
+
+	pub fn pin_remove(&mut self, names: Vec<String>) {
+		self.pin.remove(names);
+		self.save()
+			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
+	}
+
+	pub fn pin_list(&self) {
+		self.pin.list();
+	}
+
+	pub fn pin_reset(&mut self) {
+		self.pin.reset();
 	}
 }
 

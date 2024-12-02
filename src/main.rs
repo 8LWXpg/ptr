@@ -1,4 +1,5 @@
 mod config;
+mod pin;
 mod polling;
 mod util;
 
@@ -63,6 +64,13 @@ enum TopCommand {
 		name: Vec<String>,
 	},
 
+	#[clap(visible_alias = "p", arg_required_else_help = true)]
+	/// Pin plugins so it's not updated with `update --all`
+	Pin {
+		#[clap(subcommand)]
+		cmd: PinSubcommand,
+	},
+
 	#[clap(visible_alias = "l")]
 	/// List all installed plugins.
 	List,
@@ -78,6 +86,22 @@ enum TopCommand {
 	#[clap()]
 	/// Restart PowerToys
 	Restart,
+}
+
+#[derive(Subcommand)]
+enum PinSubcommand {
+	Add {
+		#[clap(num_args = 1..)]
+		/// The name of the plugins to pin.
+		name: Vec<String>,
+	},
+	Remove {
+		#[clap(num_args = 1..)]
+		/// The name of the plugins to pin.
+		name: Vec<String>,
+	},
+	List,
+	Reset,
 }
 
 fn get_styles() -> clap::builder::Styles {
@@ -119,6 +143,12 @@ fn main() {
 					}
 				}
 				TopCommand::Remove { name } => config.remove(name),
+				TopCommand::Pin { cmd } => match cmd {
+					PinSubcommand::Add { name } => config.pin_add(name),
+					PinSubcommand::List => config.pin_list(),
+					PinSubcommand::Remove { name } => config.pin_remove(name),
+					PinSubcommand::Reset => config.pin_reset(),
+				},
 				TopCommand::List => print!("{}", config),
 				TopCommand::Restart => config.restart(),
 				_ => unreachable!(),
