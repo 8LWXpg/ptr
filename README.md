@@ -47,12 +47,13 @@ This tool will create a file at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Ru
 Usage: ptr.exe <COMMAND>
 
 Commands:
-  add     Add a plugin [aliases: a]
-  update  Update plugins [aliases: u]
-  remove  Remove plugins [aliases: r]
-  list    List all installed plugins [aliases: l]
-  import  Import plugins from configuration file [aliases: i]
-  help    Print this message or the help of the given subcommand(s)
+  add      Add a plugin [aliases: a]
+  update   Update plugins [aliases: u]
+  remove   Remove plugins [aliases: r]
+  list     List all installed plugins [aliases: l]
+  import   Import plugins from configuration file [aliases: i]
+  restart  Restart PowerToys
+  help     Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help
@@ -135,6 +136,12 @@ Usage: ptr.exe import [OPTIONS]
 Options:
   -d, --dry-run  Update the configuration file without downloading the plugin
   -h, --help     Print help
+```
+
+### Restart
+
+```
+Usage: ptr.exe restart
 ```
 
 ## Why Rust?
