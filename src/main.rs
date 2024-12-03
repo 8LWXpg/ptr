@@ -2,8 +2,9 @@ mod config;
 mod polling;
 mod util;
 
-use clap::{builder::styling, Parser, Subcommand};
-use std::{env, path::PathBuf, sync::LazyLock};
+use clap::{builder::styling, CommandFactory, Parser, Subcommand};
+use clap_complete::aot::PowerShell;
+use std::{env, io, path::PathBuf, sync::LazyLock};
 
 static PLUGIN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 	PathBuf::from(&env::var("LOCALAPPDATA").unwrap())
@@ -85,6 +86,10 @@ enum TopCommand {
 	#[clap()]
 	/// Restart PowerToys
 	Restart,
+
+	#[clap()]
+	/// Generate shell completion (PowerShell)
+	Completion,
 }
 
 #[derive(Subcommand)]
@@ -157,6 +162,12 @@ fn main() {
 				},
 				TopCommand::List => print!("{}", config),
 				TopCommand::Restart => config.restart(),
+				TopCommand::Completion => clap_complete::generate(
+					PowerShell,
+					&mut App::command(),
+					"ptr",
+					&mut io::stdout(),
+				),
 				_ => unreachable!(),
 			},
 			Err(e) => exit!(e),

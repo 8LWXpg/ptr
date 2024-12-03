@@ -6,6 +6,7 @@
 
 - Added new field `admin` in `version.toml` set to `false` to disable killing as admin. **(Breaking Change)**
 - Added new subcommand `pin`, pinned plugins will not be updated with `update --all`.
+- Added new subcommand `completion` that generates PowerShell completion.
 
 ## [0.8.0]
 
