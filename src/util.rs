@@ -183,8 +183,21 @@ fn run_as_admin(program: &str, args: &str) -> Result<()> {
 	}
 }
 
-pub fn kill_ptr() -> Result<()> {
-	run_as_admin("taskkill.exe", "/F /FI \"IMAGENAME eq PowerToys*\"")?;
+pub fn kill_ptr(admin: bool) -> Result<()> {
+	use std::os::windows::process::CommandExt;
+
+	if admin {
+		run_as_admin("taskkill.exe", "/F /FI \"IMAGENAME eq PowerToys*\"")?;
+	} else {
+		let output = Command::new("taskkill.exe")
+			.raw_arg("/F /FI \"IMAGENAME eq PowerToys*\"")
+			.output()
+			.unwrap();
+		if !output.status.success() {
+			// just assume it's access denied
+			bail!("Access denied.")
+		}
+	}
 	Ok(())
 }
 

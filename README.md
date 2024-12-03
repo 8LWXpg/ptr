@@ -51,6 +51,7 @@ Commands:
   update   Update plugins [aliases: u]
   remove   Remove plugins [aliases: r]
   list     List all installed plugins [aliases: l]
+  pin      Pin plugins so it's not updated with `update --all` [aliases: p]
   import   Import plugins from configuration file [aliases: i]
   restart  Restart PowerToys
   help     Print this message or the help of the given subcommand(s)
@@ -124,6 +125,22 @@ ptr r GitHubRepo ProcessKiller
 
 ```
 Usage: ptr.exe list
+```
+
+### Pin
+
+```
+Usage: ptr.exe pin <COMMAND>
+
+Commands:
+  add     Add pins [aliases: a]
+  remove  Remove pins [aliases: r]
+  list    List pins [aliases: l]
+  reset   Clear all pins
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
 ```
 
 ### Import

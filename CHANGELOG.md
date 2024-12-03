@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.9.0]
+
+### Added
+
+- Added new field `admin` in `version.toml` set to `false` to disable killing as admin. **(Breaking Change)**
+- Added new subcommand `pin`, pinned plugins will not be updated with `update --all`.
+
 ## [0.8.0]
 
 ### Changed

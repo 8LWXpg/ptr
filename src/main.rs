@@ -63,16 +63,16 @@ enum TopCommand {
 		name: Vec<String>,
 	},
 
+	#[clap(visible_alias = "l")]
+	/// List all installed plugins.
+	List,
+
 	#[clap(visible_alias = "p", arg_required_else_help = true)]
 	/// Pin plugins so it's not updated with `update --all`
 	Pin {
 		#[clap(subcommand)]
 		cmd: PinSubcommand,
 	},
-
-	#[clap(visible_alias = "l")]
-	/// List all installed plugins.
-	List,
 
 	#[clap(visible_alias = "i")]
 	/// Import plugins from configuration file.
@@ -90,19 +90,23 @@ enum TopCommand {
 #[derive(Subcommand)]
 enum PinSubcommand {
 	#[clap(visible_alias = "a")]
+	/// Add pins
 	Add {
 		#[clap(num_args = 1..)]
 		/// The name of the plugins to pin.
 		name: Vec<String>,
 	},
 	#[clap(visible_alias = "r")]
+	/// Remove pins
 	Remove {
 		#[clap(num_args = 1..)]
 		/// The name of the plugins to pin.
 		name: Vec<String>,
 	},
 	#[clap(visible_alias = "l")]
+	/// List pins
 	List,
+	/// Clear all pins
 	Reset,
 }
 
