@@ -1,5 +1,4 @@
 mod config;
-mod pin;
 mod polling;
 mod util;
 
@@ -90,16 +89,19 @@ enum TopCommand {
 
 #[derive(Subcommand)]
 enum PinSubcommand {
+	#[clap(visible_alias = "a")]
 	Add {
 		#[clap(num_args = 1..)]
 		/// The name of the plugins to pin.
 		name: Vec<String>,
 	},
+	#[clap(visible_alias = "r")]
 	Remove {
 		#[clap(num_args = 1..)]
 		/// The name of the plugins to pin.
 		name: Vec<String>,
 	},
+	#[clap(visible_alias = "l")]
 	List,
 	Reset,
 }

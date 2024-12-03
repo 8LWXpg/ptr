@@ -2,13 +2,13 @@ use anyhow::{bail, Result};
 use colored::Colorize;
 use core::fmt;
 use serde::{Deserialize, Serialize, Serializer};
+use std::collections::HashSet;
 use std::collections::{hash_map::Entry, BTreeMap, HashMap};
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use tabwriter::TabWriter;
 
-use crate::pin::Pin;
 use crate::polling;
 use crate::util::{get_powertoys_path, kill_ptr, start_ptr};
 use crate::{add, error, exit, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PATH};
@@ -17,7 +17,7 @@ use crate::{add, error, exit, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PAT
 pub struct Config {
 	arch: Arch,
 	pt_path: PathBuf,
-	pin: Pin,
+	pin: Option<HashSet<String>>,
 	#[serde(serialize_with = "sort_keys")]
 	plugins: HashMap<String, Plugin>,
 }
@@ -47,7 +47,7 @@ impl Config {
 			Ok(Self {
 				arch: Arch::default(),
 				pt_path,
-				pin: Pin::default(),
+				pin: None,
 				plugins: HashMap::new(),
 			})
 		}
@@ -61,7 +61,7 @@ impl Config {
 		Ok(Self {
 			arch: Arch::default(),
 			pt_path,
-			pin: Pin::default(),
+			pin: None,
 			plugins: import_config.plugins,
 		})
 	}
@@ -158,8 +158,10 @@ impl Config {
 	pub fn update_all(&mut self) {
 		kill_ptr().unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for (name, plugin) in &mut self.plugins {
-			if self.pin.contains(name) {
-				continue;
+			if let Some(pins) = &self.pin {
+				if pins.contains(name) {
+					continue;
+				}
 			}
 			match plugin.update(name, self.arch.clone()) {
 				Ok(updated) => {
@@ -196,23 +198,39 @@ impl Config {
 	}
 
 	pub fn pin_add(&mut self, names: Vec<String>) {
-		self.pin.add(names);
+		if let Some(pins) = self.pin.as_mut() {
+			names.into_iter().for_each(|n| {
+				pins.insert(n);
+			});
+		} else {
+			self.pin = Some(HashSet::from_iter(names));
+		}
 		self.save()
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
 
 	pub fn pin_remove(&mut self, names: Vec<String>) {
-		self.pin.remove(names);
+		if let Some(pins) = self.pin.as_mut() {
+			names.iter().for_each(|n| {
+				pins.remove(n);
+			});
+		} else {
+			self.pin = Some(HashSet::from_iter(names));
+		}
 		self.save()
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
 
 	pub fn pin_list(&self) {
-		self.pin.list();
+		if let Some(pins) = self.pin.as_ref() {
+			pins.iter().for_each(|n| println!("{n}"));
+		}
 	}
 
 	pub fn pin_reset(&mut self) {
-		self.pin.reset();
+		self.pin = None;
+		self.save()
+			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
 }
 
