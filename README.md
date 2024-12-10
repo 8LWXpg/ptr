@@ -168,6 +168,8 @@ Usage: ptr.exe restart
 Usage: ptr.exe completion
 ```
 
+Add this line in your PowerShell `$PROFILE`:
+
 ```pwsh
 (ptr completion) -join "`n" | iex
 ```
