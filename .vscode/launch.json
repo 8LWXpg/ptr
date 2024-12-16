@@ -5,44 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "lldb",
+            "type": "cppvsdbg",
             "request": "launch",
             "name": "Debug executable 'ptr'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=ptr",
-                    "--package=ptr"
-                ],
-                "filter": {
-                    "name": "ptr",
-                    "kind": "bin"
-                }
-            },
+            "program": "${workspaceRoot}/target/debug/${workspaceFolderBasename}.exe",
             "args": [
                 "u",
                 "-a"
             ],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "rust: cargo build"
         },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'ptr'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=ptr",
-                    "--package=ptr"
-                ],
-                "filter": {
-                    "name": "ptr",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        }
     ]
 }
