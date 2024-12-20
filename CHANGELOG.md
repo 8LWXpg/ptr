@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.10.0]
+
+### Changed
+
+- Allow GitHub url as repository identifier.
+
 ## [0.9.0]
 
 ### Added
