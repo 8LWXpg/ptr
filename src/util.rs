@@ -60,11 +60,11 @@ macro_rules! gh_dl {
 pub fn gh_dl(
 	root_name: &str,
 	repo: &str,
-	version: Option<String>,
+	version: Option<&str>,
 	arch: &Arch,
-	current_version: Option<String>,
+	current_version: Option<&str>,
 ) -> Result<String> {
-	let url = if let Some(version) = version.as_ref() {
+	let url = if let Some(version) = version {
 		format!("https://api.github.com/repos/{repo}/releases/tags/{version}")
 	} else {
 		format!("https://api.github.com/repos/{repo}/releases/latest")
@@ -77,7 +77,7 @@ pub fn gh_dl(
 	if !res.status().is_success() {
 		bail!(
 			"Failed to fetch {}: {}",
-			&version.unwrap_or("latest".to_string()),
+			version.unwrap_or("latest"),
 			res.status().canonical_reason().unwrap_or("Unknown"),
 		);
 	}
@@ -85,7 +85,7 @@ pub fn gh_dl(
 	let tag = res.tag_name;
 	if let Some(current_version) = current_version {
 		if tag == current_version {
-			return Ok(current_version);
+			return Ok(current_version.to_string());
 		}
 	}
 

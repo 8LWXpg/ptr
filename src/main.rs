@@ -35,7 +35,7 @@ enum TopCommand {
 	Add {
 		/// The name of the plugin, can be anything.
 		name: String,
-		/// The GitHub repository of the plugin.
+		/// The GitHub repository identifier or url of the plugin.
 		repo: String,
 		#[clap(short, long)]
 		/// The target version of the plugin.
@@ -145,7 +145,17 @@ fn main() {
 					name,
 					repo,
 					version,
-				} => config.add(name, repo, version).unwrap_or_else(|e| exit!(e)),
+				} => config
+					.add(
+						&name,
+						if let Some(repo) = repo.strip_prefix("https://github.com/") {
+							repo.to_string()
+						} else {
+							repo
+						},
+						version,
+					)
+					.unwrap_or_else(|e| exit!(e)),
 				TopCommand::Update { name, all, version } => {
 					if all {
 						config.update_all();

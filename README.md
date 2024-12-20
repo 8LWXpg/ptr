@@ -38,12 +38,13 @@ If you have any suggestions for these limitations, feel free to open an issue.
 
 For more general pattern matching and downloading, check another tool I wrote: [gpm](https://github.com/8LWXpg/gpm).
 
-
 ## Usage
 
 This tool will create a file at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml` to store installed plugins.
 
-```
+```help
+PowerToys Run Plugin Manager
+
 Usage: ptr.exe <COMMAND>
 
 Commands:
@@ -64,12 +65,14 @@ Options:
 
 ### Add
 
-```
+```add --help
+Add a plugin
+
 Usage: ptr.exe add <NAME> <REPO>
 
 Arguments:
-  <NAME>  The name of the plugin, can be anything.
-  <REPO>  The GitHub repository of the plugin
+  <NAME>  The name of the plugin, can be anything
+  <REPO>  The GitHub repository identifier or url of the plugin
 
 Options:
   -v, --version <VERSION>  The target version of the plugin
@@ -84,7 +87,9 @@ ptr a GitHubRepo 8LWXpg/PowerToysRun-GitHubRepo
 
 ### Update
 
-```
+```update --help
+Update plugins
+
 Usage: ptr.exe update [OPTIONS] [NAME]...
 
 Arguments:
@@ -97,6 +102,7 @@ Options:
 ```
 
 e.g.
+
 ```
 ptr u -a
 ```
@@ -107,7 +113,9 @@ ptr u Plugin1 Plugin2 -v v1.1.0 -v 1.2.0
 
 ### Remove
 
-```
+```remove --help
+Remove plugins
+
 Usage: ptr.exe remove [NAME]...
 
 Arguments:
@@ -118,6 +126,7 @@ Options:
 ```
 
 e.g.
+
 ```
 ptr r GitHubRepo ProcessKiller
 ```
@@ -130,7 +139,9 @@ Usage: ptr.exe list
 
 ### Pin
 
-```
+```pin --help
+Pin plugins so it's not updated with `update --all`
+
 Usage: ptr.exe pin <COMMAND>
 
 Commands:
@@ -148,7 +159,9 @@ Options:
 
 This reads the configuration file at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml`.
 
-```
+```import --help
+Import plugins from configuration file
+
 Usage: ptr.exe import [OPTIONS]
 
 Options:

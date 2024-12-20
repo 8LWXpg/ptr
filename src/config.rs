@@ -98,11 +98,11 @@ impl Config {
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
 
-	pub fn add(&mut self, name: String, repo: String, version: Option<String>) -> Result<()> {
-		if let Entry::Vacant(e) = self.plugins.entry(name.clone()) {
+	pub fn add(&mut self, name: &str, repo: String, version: Option<String>) -> Result<()> {
+		if let Entry::Vacant(e) = self.plugins.entry(name.to_string()) {
 			kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 			let version = &e
-				.insert(Plugin::add(&name, repo, version, &self.arch)?)
+				.insert(Plugin::add(name, repo, version, &self.arch)?)
 				.version;
 			add!(name, version);
 			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
@@ -123,7 +123,7 @@ impl Config {
 				.unwrap_or((&names, &[]));
 			for (name, version) in with_versions.iter().zip(versions) {
 				if let Some(plugin) = self.plugins.get_mut(name) {
-					match plugin.update_to(name, self.arch.clone(), version) {
+					match plugin.update_to(name, &self.arch, &version) {
 						Ok(updated) => {
 							if updated {
 								add!(name, plugin.version)
@@ -141,7 +141,7 @@ impl Config {
 		};
 		for name in without_versions {
 			if let Some(plugin) = self.plugins.get_mut(name) {
-				match plugin.update(name, self.arch.clone()) {
+				match plugin.update(name, &self.arch) {
 					Ok(updated) => {
 						if updated {
 							add!(name, plugin.version)
@@ -166,7 +166,7 @@ impl Config {
 					continue;
 				}
 			}
-			match plugin.update(name, self.arch.clone()) {
+			match plugin.update(name, &self.arch) {
 				Ok(updated) => {
 					if updated {
 						add!(name, plugin.version)
@@ -297,14 +297,14 @@ struct Plugin {
 impl Plugin {
 	/// Add a plugin with the specified version, None for the latest version.
 	fn add(name: &str, repo: String, version: Option<String>, arch: &Arch) -> Result<Self> {
-		let version = gh_dl!(name, &repo, version, arch)?;
+		let version = gh_dl!(name, &repo, version.as_deref(), arch)?;
 		Ok(Self { repo, version })
 	}
 
 	/// Update the plugin to the latest version.
 	/// Return `true` if the version is updated.
-	fn update(&mut self, name: &str, arch: Arch) -> Result<bool> {
-		let version = gh_dl!(name, &self.repo, None, &arch, self.version.clone())?;
+	fn update(&mut self, name: &str, arch: &Arch) -> Result<bool> {
+		let version = gh_dl!(name, &self.repo, None, arch, &self.version)?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)
@@ -315,8 +315,8 @@ impl Plugin {
 
 	/// Update the plugin to specific version.
 	/// Return `true` if the version is updated.
-	fn update_to(&mut self, name: &str, arch: Arch, version: String) -> Result<bool> {
-		let version = gh_dl!(name, &self.repo, Some(version), &arch, self.version.clone())?;
+	fn update_to(&mut self, name: &str, arch: &Arch, version: &str) -> Result<bool> {
+		let version = gh_dl!(name, &self.repo, Some(version), arch, &self.version)?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)
