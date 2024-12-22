@@ -151,7 +151,7 @@ fn extract_zip(zip_path: &Path, root_name: &str) -> Result<()> {
 	Ok(())
 }
 
-fn run_as_admin(program: &str, args: &str) -> Result<()> {
+fn run_process(program: &str, args: &str, admin: bool) -> Result<()> {
 	use windows::core::{w, HSTRING, PCWSTR};
 	use windows::Win32::Foundation::CloseHandle;
 	use windows::Win32::System::Threading::{GetExitCodeProcess, WaitForSingleObject, INFINITE};
@@ -160,7 +160,9 @@ fn run_as_admin(program: &str, args: &str) -> Result<()> {
 	let mut sei: SHELLEXECUTEINFOW = unsafe { mem::zeroed() };
 	sei.cbSize = mem::size_of::<SHELLEXECUTEINFOW>() as u32;
 	sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-	sei.lpVerb = w!("runas");
+	if admin {
+		sei.lpVerb = w!("runas");
+	}
 	let h_file = HSTRING::from(program);
 	sei.lpFile = PCWSTR(h_file.as_ptr());
 	sei.nShow = 0; // SW_HIDE
@@ -184,20 +186,7 @@ fn run_as_admin(program: &str, args: &str) -> Result<()> {
 }
 
 pub fn kill_ptr(admin: bool) -> Result<()> {
-	use std::os::windows::process::CommandExt;
-
-	if admin {
-		run_as_admin("taskkill.exe", "/F /FI \"IMAGENAME eq PowerToys*\"")?;
-	} else {
-		let output = Command::new("taskkill.exe")
-			.raw_arg("/F /FI \"IMAGENAME eq PowerToys*\"")
-			.output()
-			.unwrap();
-		if !output.status.success() {
-			// just assume it's access denied
-			bail!("Access denied.")
-		}
-	}
+	run_process("taskkill.exe", "/F /FI \"IMAGENAME eq PowerToys*\"", admin)?;
 	Ok(())
 }
 
