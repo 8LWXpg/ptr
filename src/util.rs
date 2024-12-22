@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Ok, Result};
 use colored::Colorize;
 use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, ACCEPT, USER_AGENT};
@@ -81,7 +81,7 @@ pub fn gh_dl(
 			res.status().canonical_reason().unwrap_or("Unknown"),
 		);
 	}
-	let res = res.json::<ApiResponse>()?;
+	let res: ApiResponse = res.json()?;
 	let tag = res.tag_name;
 	if let Some(current_version) = current_version {
 		if tag == current_version {
@@ -220,6 +220,56 @@ fn prompt(msg: &str) -> Result<String> {
 	Ok(input.trim().to_string())
 }
 
+pub fn self_update() -> Result<()> {
+	use crate::{add, up_to_date};
+
+	// download asset
+	let current_version = env!("CARGO_PKG_VERSION");
+	let url = "https://api.github.com/repos/8LWXpg/ptr/releases/latest";
+	let mut headers = HeaderMap::new();
+	headers.insert(USER_AGENT, "reqwest".parse().unwrap());
+	headers.insert(ACCEPT, "application/vnd.github+json".parse().unwrap());
+	headers.insert("X-GitHub-Api-Version", "2022-11-28".parse().unwrap());
+	let res = Client::new().get(url).headers(headers).send()?;
+	if !res.status().is_success() {
+		bail!(
+			"Failed to fetch latest: {}",
+			res.status().canonical_reason().unwrap_or("Unknown"),
+		);
+	}
+	let res: ApiResponse = res.json()?;
+	let tag = res.tag_name;
+	if tag == current_version {
+		up_to_date!("ptr", current_version);
+		return Ok(());
+	}
+
+	let assets = res.assets;
+	let asset = assets
+		.iter()
+		.find(|a| a.name.contains(std::env::consts::ARCH))
+		.unwrap();
+	let (url, name) = (&asset.browser_download_url, &asset.name);
+	let res = Client::new().get(url).send()?;
+
+	let file_path = PLUGIN_PATH.join(name);
+	// {
+	// let mut file = File::create(&file_path)?;
+	File::create(&file_path)?.write_all(&res.bytes()?)?;
+	// }
+
+	// extract and replace self
+	let mut archive = ZipArchive::new(File::open(file_path)?)?;
+	let out_path = PLUGIN_PATH.join("ptr.exe");
+	let mut out_file = File::create(&out_path)?;
+	io::copy(&mut archive.by_name("ptr.exe")?, &mut out_file)?;
+	self_replace::self_replace(&out_path)?;
+	fs::remove_file(&out_path)?;
+	add!("ptr", tag);
+	Ok(())
+}
+
+// region: macro
 #[macro_export]
 macro_rules! print_message {
     ($symbol:expr, $color:ident, $msg:expr) => {
@@ -281,3 +331,4 @@ macro_rules! exit {
         std::process::exit(0);
     }};
 }
+// endregion

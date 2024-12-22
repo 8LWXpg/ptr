@@ -5,6 +5,7 @@ mod util;
 use clap::{builder::styling, CommandFactory, Parser, Subcommand};
 use clap_complete::aot::PowerShell;
 use std::{env, io, path::PathBuf, sync::LazyLock};
+use util::self_update;
 
 static PLUGIN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 	PathBuf::from(&env::var("LOCALAPPDATA").unwrap())
@@ -35,7 +36,7 @@ enum TopCommand {
 	Add {
 		/// The name of the plugin, can be anything.
 		name: String,
-		/// The GitHub repository identifier or url of the plugin.
+		/// The GitHub repository identifier or URL of the plugin.
 		repo: String,
 		#[clap(short, long)]
 		/// The target version of the plugin.
@@ -69,7 +70,7 @@ enum TopCommand {
 	List,
 
 	#[clap(visible_alias = "p", arg_required_else_help = true)]
-	/// Pin plugins so it's not updated with `update --all`
+	/// Pin plugins so it's not updated with `update --all`.
 	Pin {
 		#[clap(subcommand)]
 		cmd: PinSubcommand,
@@ -79,23 +80,27 @@ enum TopCommand {
 	/// Import plugins from configuration file.
 	Import {
 		#[clap(short, long)]
-		/// Update the configuration file without downloading the plugin
+		/// Update the configuration file without downloading the plugin.
 		dry_run: bool,
 	},
 
 	#[clap()]
-	/// Restart PowerToys
+	/// Restart PowerToys.
 	Restart,
 
 	#[clap()]
-	/// Generate shell completion (PowerShell)
+	/// Self update to latest.
+	SelfUpdate,
+
+	#[clap()]
+	/// Generate shell completion (PowerShell).
 	Completion,
 }
 
 #[derive(Subcommand)]
 enum PinSubcommand {
 	#[clap(visible_alias = "a")]
-	/// Add pins
+	/// Add pins.
 	Add {
 		#[clap(num_args = 1..)]
 		/// The name of the plugins to pin.
@@ -109,9 +114,9 @@ enum PinSubcommand {
 		name: Vec<String>,
 	},
 	#[clap(visible_alias = "l")]
-	/// List pins
+	/// List pins.
 	List,
-	/// Clear all pins
+	/// Clear all pins.
 	Reset,
 }
 
@@ -139,6 +144,7 @@ fn main() {
 			}
 			Err(e) => exit!(e),
 		},
+		TopCommand::SelfUpdate => self_update().unwrap_or_else(|e| exit!(e)),
 		_ => match config::Config::new() {
 			Ok(mut config) => match args.cmd {
 				TopCommand::Add {

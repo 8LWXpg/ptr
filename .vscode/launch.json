@@ -10,8 +10,7 @@
             "name": "Debug executable 'ptr'",
             "program": "${workspaceRoot}/target/debug/${workspaceFolderBasename}.exe",
             "args": [
-                "u",
-                "-a"
+                "self-update",
             ],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "rust: cargo build"

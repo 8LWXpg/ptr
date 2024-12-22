@@ -1,4 +1,4 @@
-//! Retry io operations on error.
+//! Retry IO operations on error.
 
 use std::io::{Read, Write};
 use std::path::Path;
