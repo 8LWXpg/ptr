@@ -175,6 +175,12 @@ Options:
 Usage: ptr.exe restart
 ```
 
+### Self Update
+
+```
+Usage: ptr.exe self-update
+```
+
 ### Completion
 
 ```

@@ -239,7 +239,7 @@ pub fn self_update() -> Result<()> {
 	}
 	let res: ApiResponse = res.json()?;
 	let tag = res.tag_name;
-	if tag == current_version {
+	if tag == format!("v{current_version}") {
 		up_to_date!("ptr", current_version);
 		return Ok(());
 	}
@@ -253,17 +253,15 @@ pub fn self_update() -> Result<()> {
 	let res = Client::new().get(url).send()?;
 
 	let file_path = PLUGIN_PATH.join(name);
-	// {
-	// let mut file = File::create(&file_path)?;
 	File::create(&file_path)?.write_all(&res.bytes()?)?;
-	// }
 
-	// extract and replace self
-	let mut archive = ZipArchive::new(File::open(file_path)?)?;
+	// extract and self replace
+	let mut archive = ZipArchive::new(File::open(&file_path)?)?;
 	let out_path = PLUGIN_PATH.join("ptr.exe");
 	let mut out_file = File::create(&out_path)?;
 	io::copy(&mut archive.by_name("ptr.exe")?, &mut out_file)?;
 	self_replace::self_replace(&out_path)?;
+	fs::remove_file(&file_path)?;
 	fs::remove_file(&out_path)?;
 	add!("ptr", tag);
 	Ok(())

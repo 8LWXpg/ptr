@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.11.0]
+
+### Added
+
+- Added `self-update` subcommand.
+
 ## [0.10.0]
 
 ### Changed
