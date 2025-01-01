@@ -252,12 +252,12 @@ pub fn self_update() -> Result<()> {
 	let (url, name) = (&asset.browser_download_url, &asset.name);
 	let res = Client::new().get(url).send()?;
 
-	let file_path = PLUGIN_PATH.join(name);
+	let file_path = env::temp_dir().join(name);
 	File::create(&file_path)?.write_all(&res.bytes()?)?;
 
 	// extract and self replace
 	let mut archive = ZipArchive::new(File::open(&file_path)?)?;
-	let out_path = PLUGIN_PATH.join("ptr.exe");
+	let out_path = env::temp_dir().join("ptr.exe");
 	let mut out_file = File::create(&out_path)?;
 	io::copy(&mut archive.by_name("ptr.exe")?, &mut out_file)?;
 	self_replace::self_replace(&out_path)?;
