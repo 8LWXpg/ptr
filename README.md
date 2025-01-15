@@ -48,15 +48,16 @@ PowerToys Run Plugin Manager
 Usage: ptr.exe <COMMAND>
 
 Commands:
-  add         Add a plugin [aliases: a]
-  update      Update plugins [aliases: u]
-  remove      Remove plugins [aliases: r]
-  list        List all installed plugins [aliases: l]
-  pin         Pin plugins so it's not updated with `update --all` [aliases: p]
-  import      Import plugins from configuration file [aliases: i]
-  restart     Restart PowerToys
-  completion  Generate shell completion (PowerShell)
-  help        Print this message or the help of the given subcommand(s)
+  add          Add a plugin [aliases: a]
+  update       Update plugins [aliases: u]
+  remove       Remove plugins [aliases: r]
+  list         List all installed plugins [aliases: l]
+  pin          Pin plugins so it's not updated with `update --all` [aliases: p]
+  import       Import plugins from configuration file [aliases: i]
+  restart      Restart PowerToys
+  self-update  Self update to latest
+  completion   Generate shell completion (PowerShell)
+  help         Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help
@@ -72,7 +73,7 @@ Usage: ptr.exe add <NAME> <REPO>
 
 Arguments:
   <NAME>  The name of the plugin, can be anything
-  <REPO>  The GitHub repository identifier or url of the plugin
+  <REPO>  The GitHub repository identifier or URL of the plugin
 
 Options:
   -v, --version <VERSION>  The target version of the plugin
