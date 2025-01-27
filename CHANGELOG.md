@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+### Changed
+
+- Skip unexpected file on zip extraction.
+
 ## [0.11.0]
 
 ### Added

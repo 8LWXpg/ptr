@@ -134,19 +134,18 @@ fn get_styles() -> clap::builder::Styles {
 fn main() {
 	let args = App::parse();
 	match args.cmd {
-		TopCommand::Import { dry_run } => match config::Config::import() {
-			Ok(mut config) => {
-				if dry_run {
-					config.save().unwrap_or_else(|e| exit!(e));
-				} else {
-					config.import_plugins();
-				}
+		TopCommand::Import { dry_run } => {
+			let mut config = config::Config::import().unwrap_or_else(|e| exit!(e));
+			if dry_run {
+				config.save().unwrap_or_else(|e| exit!(e));
+			} else {
+				config.import_plugins();
 			}
-			Err(e) => exit!(e),
-		},
+		}
 		TopCommand::SelfUpdate => self_update().unwrap_or_else(|e| exit!(e)),
-		_ => match config::Config::new() {
-			Ok(mut config) => match args.cmd {
+		_ => {
+			let mut config = config::Config::new().unwrap_or_else(|e| exit!(e));
+			match args.cmd {
 				TopCommand::Add {
 					name,
 					repo,
@@ -185,8 +184,7 @@ fn main() {
 					&mut io::stdout(),
 				),
 				_ => unreachable!(),
-			},
-			Err(e) => exit!(e),
-		},
+			}
+		}
 	}
 }

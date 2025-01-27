@@ -11,6 +11,7 @@ use std::{env, mem};
 use zip::ZipArchive;
 
 use crate::config::Arch;
+use crate::error;
 use crate::polling;
 use crate::PLUGIN_PATH;
 
@@ -127,7 +128,7 @@ fn extract_zip(zip_path: &Path, root_name: &str) -> Result<()> {
 	let dll = archive
 		.file_names()
 		.find(|f| f.ends_with(".dll"))
-		.ok_or(anyhow!("No .dll file found"))?
+		.ok_or(anyhow!("No .dll file found in zip"))?
 		.to_owned();
 	let parent = Path::new(&dll).parent().unwrap_or(Path::new(""));
 
@@ -135,7 +136,14 @@ fn extract_zip(zip_path: &Path, root_name: &str) -> Result<()> {
 	let root = PathBuf::from(root_name);
 	for i in 0..archive.len() {
 		let mut file = archive.by_index(i)?;
-		let out_path = root.join(Path::new(file.name()).strip_prefix(parent)?);
+
+		let out_path =
+			if let std::result::Result::Ok(path) = Path::new(file.name()).strip_prefix(parent) {
+				root.join(path)
+			} else {
+				error!("Unexpected file in zip at {}", file.name());
+				continue;
+			};
 
 		if file.is_dir() {
 			fs::create_dir_all(out_path)?;
