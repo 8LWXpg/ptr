@@ -5,6 +5,7 @@
 ### Changed
 
 - Skip unexpected file on zip extraction.
+- Changed self replace directory to `%TEMP%`.
 
 ## [0.11.0]
 
