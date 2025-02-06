@@ -83,11 +83,11 @@ impl Config {
 	pub fn import_plugins(&mut self) {
 		let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
 		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
-		for (name, plugin) in &self.plugins {
-			match Plugin::add(name, plugin.repo.clone(), None, &self.arch) {
-				Ok(plugin) => {
+		for (name, plugin) in &mut self.plugins {
+			match plugin.force_update(name, &self.arch) {
+				Ok(()) => {
 					add!(name, &plugin.version);
-					new_plugins.insert(name.clone(), plugin);
+					new_plugins.insert(name.clone(), plugin.clone());
 				}
 				Err(e) => exit!("Failed to import {}: {}", name, e),
 			}
@@ -98,11 +98,17 @@ impl Config {
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
 
-	pub fn add(&mut self, name: &str, repo: String, version: Option<String>) -> Result<()> {
+	pub fn add(
+		&mut self,
+		name: &str,
+		repo: String,
+		version: Option<String>,
+		pattern: Option<String>,
+	) -> Result<()> {
 		if let Entry::Vacant(e) = self.plugins.entry(name.to_string()) {
 			kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 			let version = &e
-				.insert(Plugin::add(name, repo, version, &self.arch)?)
+				.insert(Plugin::add(name, repo, version, &self.arch, pattern)?)
 				.version;
 			add!(name, version);
 			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
@@ -242,13 +248,17 @@ impl fmt::Display for Config {
 		let mut tw = TabWriter::new(vec![]);
 		writeln!(&mut tw, "{}", "Plugins:".bright_green()).unwrap();
 		let btree_map: BTreeMap<_, _> = self.plugins.iter().collect();
-		for (name, plugin) in &btree_map {
+		for (name, plugin) in btree_map {
 			writeln!(
 				&mut tw,
-				"  {}\t{}\t{}",
+				"  {}\t{}\t{}\t{}",
 				name.bright_cyan(),
 				plugin.repo,
-				plugin.version
+				plugin.version,
+				match plugin.pattern.as_ref() {
+					Some(pattern) => pattern,
+					None => "",
+				},
 			)
 			.unwrap();
 		}
@@ -288,23 +298,41 @@ impl fmt::Display for Arch {
 	}
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 struct Plugin {
 	repo: String,
 	version: String,
+	pattern: Option<String>,
 }
 
 impl Plugin {
 	/// Add a plugin with the specified version, None for the latest version.
-	fn add(name: &str, repo: String, version: Option<String>, arch: &Arch) -> Result<Self> {
-		let version = gh_dl!(name, &repo, version.as_deref(), arch)?;
-		Ok(Self { repo, version })
+	fn add(
+		name: &str,
+		repo: String,
+		version: Option<String>,
+		arch: &Arch,
+		pattern: Option<String>,
+	) -> Result<Self> {
+		let version = gh_dl!(name, &repo, version.as_deref(), arch, pattern.as_deref())?;
+		Ok(Self {
+			repo,
+			version,
+			pattern,
+		})
 	}
 
 	/// Update the plugin to the latest version.
 	/// Return `true` if the version is updated.
 	fn update(&mut self, name: &str, arch: &Arch) -> Result<bool> {
-		let version = gh_dl!(name, &self.repo, None, arch, &self.version)?;
+		let version = gh_dl!(
+			name,
+			&self.repo,
+			None,
+			arch,
+			&self.version,
+			self.pattern.as_deref()
+		)?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)
@@ -316,13 +344,34 @@ impl Plugin {
 	/// Update the plugin to specific version.
 	/// Return `true` if the version is updated.
 	fn update_to(&mut self, name: &str, arch: &Arch, version: &str) -> Result<bool> {
-		let version = gh_dl!(name, &self.repo, Some(version), arch, &self.version)?;
+		let version = gh_dl!(
+			name,
+			&self.repo,
+			Some(version),
+			arch,
+			&self.version,
+			self.pattern.as_deref()
+		)?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)
 		} else {
 			Ok(false)
 		}
+	}
+
+	/// Update without checking current version.
+	fn force_update(&mut self, name: &str, arch: &Arch) -> Result<()> {
+		let version = gh_dl!(
+			name,
+			&self.repo,
+			None,
+			arch,
+			&self.version,
+			self.pattern.as_deref()
+		)?;
+		self.version = version;
+		Ok(())
 	}
 
 	/// Remove the `PLUGIN_PATH/name` directory.

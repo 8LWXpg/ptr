@@ -1,5 +1,6 @@
 use anyhow::{anyhow, bail, Ok, Result};
 use colored::Colorize;
+use regex::Regex;
 use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, ACCEPT, USER_AGENT};
 use serde::Deserialize;
@@ -11,9 +12,9 @@ use std::{env, mem};
 use zip::ZipArchive;
 
 use crate::config::Arch;
-use crate::error;
 use crate::polling;
 use crate::PLUGIN_PATH;
+use crate::{error, exit};
 
 #[derive(Deserialize)]
 struct ApiResponse {
@@ -39,11 +40,18 @@ impl Assets {
 
 #[macro_export]
 macro_rules! gh_dl {
-	($root_name:expr, $repo:expr, $version:expr, $arch:expr) => {
-		$crate::util::gh_dl($root_name, $repo, $version, $arch, None)
+	($root_name:expr, $repo:expr, $version:expr, $arch:expr, $pattern:expr) => {
+		$crate::util::gh_dl($root_name, $repo, $version, $arch, None, $pattern)
 	};
-	($root_name:expr, $repo:expr, $version:expr, $arch:expr, $current_version:expr) => {
-		$crate::util::gh_dl($root_name, $repo, $version, $arch, Some($current_version))
+	($root_name:expr, $repo:expr, $version:expr, $arch:expr, $current_version:expr, $pattern:expr) => {
+		$crate::util::gh_dl(
+			$root_name,
+			$repo,
+			$version,
+			$arch,
+			Some($current_version),
+			$pattern,
+		)
 	};
 }
 
@@ -55,6 +63,7 @@ macro_rules! gh_dl {
 /// * `version` - The tagged version of the repository to download.
 /// * `arch` - The architecture of the system, either x64 or arm64.
 /// * `current_version` - The current version of the repository that is installed.
+/// * `pattern` - match pattern for assets
 ///
 /// # Returns
 /// The version of the repository that was downloaded.
@@ -64,6 +73,7 @@ pub fn gh_dl(
 	version: Option<&str>,
 	arch: &Arch,
 	current_version: Option<&str>,
+	pattern: Option<&str>,
 ) -> Result<String> {
 	let url = if let Some(version) = version {
 		format!("https://api.github.com/repos/{repo}/releases/tags/{version}")
@@ -91,7 +101,16 @@ pub fn gh_dl(
 	}
 
 	let assets = res.assets;
-	let asset = match assets.iter().find(|a| a.is_arch(arch)) {
+	let asset = match assets.iter().find(|a| {
+		if let Some(pattern) = pattern {
+			let p = Regex::new(pattern).unwrap_or_else(|e| {
+				exit!(anyhow!(e).context(format!("Invalid regex pattern: '{}': ", pattern)))
+			});
+			p.is_match(&a.name)
+		} else {
+			a.is_arch(arch)
+		}
+	}) {
 		Some(asset) => asset,
 		None => manual_select(&assets)?,
 	};

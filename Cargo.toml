@@ -8,18 +8,11 @@ anyhow = "1.0.95"
 clap = { version = "4.5.26", features = ["derive"] }
 clap_complete = "4.5.42"
 colored = "3.0.0"
-reqwest = { version = "0.12.12", default-features = false, features = [
-  "blocking",
-  "json",
-  "native-tls",
-] }
+regex = { version = "1.11.1", default-features = false }
+reqwest = { version = "0.12.12", default-features = false, features = ["blocking", "json", "native-tls"] }
 self-replace = "1.5.0"
 serde = { version = "1.0.217", features = ["derive"] }
 tabwriter = { version = "1.4.1", features = ["ansi_formatting"] }
 toml = "0.8.19"
-windows = { version = "0.59.0", features = [
-  "Win32_UI_Shell",
-  "Win32_System_Registry",
-  "Win32_System_Threading",
-] }
+windows = { version = "0.59.0", features = ["Win32_UI_Shell", "Win32_System_Registry", "Win32_System_Threading"] }
 zip = { version = "2.2.2", default-features = false, features = ["deflate"] }

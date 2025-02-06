@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Added new optional argument `--pattern` for `add` subcommand (rust regex).
+
 ### Changed
 
 - Skip unexpected file on zip extraction.

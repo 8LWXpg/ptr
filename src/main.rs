@@ -32,41 +32,44 @@ struct App {
 #[derive(Subcommand)]
 enum TopCommand {
 	#[clap(visible_alias = "a", arg_required_else_help = true)]
-	/// Add a plugin.
+	/// Add a plugin
 	Add {
-		/// The name of the plugin, can be anything.
+		/// Plugin name, can be anything
 		name: String,
-		/// The GitHub repository identifier or URL of the plugin.
+		/// GitHub repository identifier or URL of the plugin
 		repo: String,
 		#[clap(short, long)]
-		/// The target version of the plugin.
+		/// Target version
 		version: Option<String>,
+		#[clap(short, long)]
+		/// Asset match pattern (rust regex)
+		pattern: Option<String>,
 	},
 
 	#[clap(visible_alias = "u", arg_required_else_help = true)]
-	/// Update plugins.
+	/// Update plugins
 	Update {
 		#[clap(num_args = 1..)]
-		/// The name of the plugins to update.
+		/// Name of the plugins to update
 		name: Vec<String>,
 		#[clap(short, long)]
-		/// Update all plugins.
+		/// Update all plugins
 		all: bool,
 		#[clap(short, long)]
-		/// Version to update to.
+		/// Version to update
 		version: Option<Vec<String>>,
 	},
 
 	#[clap(visible_alias = "r", arg_required_else_help = true)]
-	/// Remove plugins.
+	/// Remove plugins
 	Remove {
 		#[clap(num_args = 1..)]
-		/// The name of the plugins to remove.
+		/// Name of the plugins to remove.
 		name: Vec<String>,
 	},
 
 	#[clap(visible_alias = "l")]
-	/// List all installed plugins.
+	/// List all installed plugins
 	List,
 
 	#[clap(visible_alias = "p", arg_required_else_help = true)]
@@ -77,23 +80,23 @@ enum TopCommand {
 	},
 
 	#[clap(visible_alias = "i")]
-	/// Import plugins from configuration file.
+	/// Import plugins from configuration file
 	Import {
 		#[clap(short, long)]
-		/// Update the configuration file without downloading the plugin.
+		/// Update the configuration file without downloading the plugin
 		dry_run: bool,
 	},
 
 	#[clap()]
-	/// Restart PowerToys.
+	/// Restart PowerToys
 	Restart,
 
 	#[clap()]
-	/// Self update to latest.
+	/// Self update to latest
 	SelfUpdate,
 
 	#[clap()]
-	/// Generate shell completion (PowerShell).
+	/// Generate shell completion (PowerShell)
 	Completion,
 }
 
@@ -150,6 +153,7 @@ fn main() {
 					name,
 					repo,
 					version,
+					pattern,
 				} => config
 					.add(
 						&name,
@@ -159,6 +163,7 @@ fn main() {
 							repo
 						},
 						version,
+						pattern,
 					)
 					.unwrap_or_else(|e| exit!(e)),
 				TopCommand::Update { name, all, version } => {
