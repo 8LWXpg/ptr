@@ -69,14 +69,15 @@ Options:
 ```add --help
 Add a plugin
 
-Usage: ptr.exe add <NAME> <REPO>
+Usage: ptr.exe add [OPTIONS] <NAME> <REPO>
 
 Arguments:
-  <NAME>  The name of the plugin, can be anything
-  <REPO>  The GitHub repository identifier or URL of the plugin
+  <NAME>  Plugin name, can be anything
+  <REPO>  GitHub repository identifier or URL of the plugin
 
 Options:
-  -v, --version <VERSION>  The target version of the plugin
+  -v, --version <VERSION>  Target version
+  -p, --pattern <PATTERN>  Asset match pattern (rust regex)
   -h, --help               Print help
 ```
 
@@ -94,11 +95,11 @@ Update plugins
 Usage: ptr.exe update [OPTIONS] [NAME]...
 
 Arguments:
-  [NAME]...  The name of the plugins to update
+  [NAME]...  Name of the plugins to update
 
 Options:
   -a, --all                Update all plugins
-  -v, --version <VERSION>  Version to update to
+  -v, --version <VERSION>  Version to update
   -h, --help               Print help
 ```
 
@@ -120,7 +121,7 @@ Remove plugins
 Usage: ptr.exe remove [NAME]...
 
 Arguments:
-  [NAME]...  The name of the plugins to remove
+  [NAME]...  Name of the plugins to remove
 
 Options:
   -h, --help  Print help
