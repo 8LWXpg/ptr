@@ -27,20 +27,15 @@ cargo install --git https://github.com/8LWXpg/ptr.git
 If you have any suggestions for these limitations, feel free to open an issue.
 
 - This tool only supports plugins hosted on GitHub.
-- The plugin release must be a zip file with either `x64` or `arm64` in the file name, or the tool will prompt you to specify the asset.
-- The zip structure must be like this:
-  ```
-  something-x64.zip
-  └── anyPluginName
-      |   plugin.dll
-      └── plugin files...
-  ```
+- The plugin release must be a zip file with either `x64` or `arm64` in the file name, or a pattern from `--pattern` is required.
 
 For more general pattern matching and downloading, check another tool I wrote: [gpm](https://github.com/8LWXpg/gpm).
 
 ## Usage
 
 This tool will create a file at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml` to store installed plugins.
+
+Check [`test.toml`](./test/test.toml) for default config structure.
 
 ```help
 PowerToys Run Plugin Manager

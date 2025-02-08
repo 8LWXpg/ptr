@@ -1,0 +1,5 @@
+arch = "x64"
+pt_path = "C:/Program Files/PowerToys/PowerToys.exe"
+admin = false
+
+[plugins]

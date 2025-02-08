@@ -380,3 +380,33 @@ impl Plugin {
 		Ok(())
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use std::io::Read;
+
+	use super::*;
+
+	#[test]
+	fn generate_toml() {
+		let config = Config {
+			arch: Arch::X64,
+			admin: false,
+			pin: None,
+			pt_path: "C:/Program Files/PowerToys/PowerToys.exe".into(),
+			plugins: HashMap::new(),
+		};
+		let toml = toml::to_string_pretty(&config).unwrap();
+		let mut file = fs::File::create("./test/test.toml").unwrap();
+		file.write_all(toml.as_bytes()).unwrap();
+	}
+
+	#[test]
+	fn test_breaking_config() {
+		let mut file = fs::File::open("./test/test.toml").unwrap();
+		let mut toml = String::new();
+		file.read_to_string(&mut toml).unwrap();
+		let config: Config = toml::from_str(&toml).unwrap();
+		println!("{:?}", config);
+	}
+}
