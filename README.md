@@ -35,7 +35,7 @@ For more general pattern matching and downloading, check another tool I wrote: [
 
 This tool will create a file at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml` to store installed plugins.
 
-Check [`test.toml`](./test/test.toml) for default config structure.
+Check [`test.toml`](./test/test.toml) for generated config structure.
 
 ```help
 PowerToys Run Plugin Manager

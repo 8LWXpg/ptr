@@ -17,6 +17,7 @@ use crate::{add, error, exit, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PAT
 pub struct Config {
 	arch: Arch,
 	pt_path: PathBuf,
+	/// Kill and run as admin
 	admin: bool,
 	pin: Option<HashSet<String>>,
 	#[serde(serialize_with = "sort_keys")]
@@ -391,7 +392,7 @@ mod tests {
 	fn generate_toml() {
 		let config = Config {
 			arch: Arch::X64,
-			admin: false,
+			admin: true,
 			pin: None,
 			pt_path: "C:/Program Files/PowerToys/PowerToys.exe".into(),
 			plugins: HashMap::new(),
