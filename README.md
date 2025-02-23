@@ -14,22 +14,13 @@ or build from source:
 cargo install --git https://github.com/8LWXpg/ptr.git
 ```
 
-### Features
+## Features
 
 - Easy to use command line interface with informative help messages.
 - Automatically download and install plugins from GitHub.
 - Restart PowerToys after installing or removing plugins.
 - Update all plugins with a single command.
 - Restore plugins from a configuration file.
-
-## Limitations
-
-If you have any suggestions for these limitations, feel free to open an issue.
-
-- This tool only supports plugins hosted on GitHub.
-- The plugin release must be a zip file with either `x64` or `arm64` in the file name, or a pattern from `--pattern` is required.
-
-For more general pattern matching and downloading, check another tool I wrote: [gpm](https://github.com/8LWXpg/gpm).
 
 ## Quick Start
 
@@ -59,6 +50,15 @@ Use alias to type commands faster:
 ```
 ptr u -a
 ```
+
+## Limitations
+
+If you have any suggestions for these limitations, feel free to open an issue.
+
+- This tool only supports plugins hosted on GitHub.
+- The plugin release must be a zip file with either `x64` or `arm64` in the file name, or a pattern from `--pattern` is required.
+
+For more general pattern matching and downloading, check another tool I wrote: [gpm](https://github.com/8LWXpg/gpm).
 
 ## Usage
 
