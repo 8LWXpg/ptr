@@ -1,5 +1,12 @@
 arch = "x64"
 pt_path = "C:/Program Files/PowerToys/PowerToys.exe"
 admin = true
+pins = ["GitHubRepo"]
 
-[plugins]
+[plugins.GitHubRepo]
+repo = "8LWXpg/PowerToysRun-GitHubRepo"
+version = "v1.9.0"
+
+[plugins.ProcessKiller]
+repo = "8LWXpg/PowerToysRun-ProcessKiller"
+version = "v1.9.0"
