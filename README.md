@@ -31,11 +31,36 @@ If you have any suggestions for these limitations, feel free to open an issue.
 
 For more general pattern matching and downloading, check another tool I wrote: [gpm](https://github.com/8LWXpg/gpm).
 
+## Quick Start
+
+Install a plugin with `add`:
+
+```
+ptr add GitHubRepo 8LWXpg/PowerToysRun-GitHubRepo
+```
+
+A config file will be created at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml`. It's not required, but you can manually modify it if desired. For the generated config structure, refer to [`test.toml`](./test/test.toml).
+
+Check result with `list`:
+
+```
+ptr list
+```
+
+Use `help`, `-h` or `--help` to quickly check for usage:
+
+```
+ptr pin -h
+ptr pin add -h
+```
+
+Use alias to type commands faster:
+
+```
+ptr u -a
+```
+
 ## Usage
-
-This tool will create a file at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml` to store installed plugins.
-
-Check [`test.toml`](./test/test.toml) for generated config structure.
 
 ```help
 PowerToys Run Plugin Manager
