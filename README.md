@@ -30,7 +30,7 @@ Install a plugin with `add`:
 ptr add GitHubRepo 8LWXpg/PowerToysRun-GitHubRepo
 ```
 
-A config file will be created at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml`. It's not required, but you can manually modify it if desired. For the generated config structure, refer to [`test.toml`](./test/test.toml).
+A config file will be created at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml`. While not necessary, you can manually modify it if desired. For the generated config structure, refer to [`test.toml`](./test/test.toml).
 
 Check result with `list`:
 
