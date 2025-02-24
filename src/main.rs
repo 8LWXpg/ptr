@@ -4,7 +4,7 @@ mod util;
 
 use clap::{builder::styling, CommandFactory, Parser, Subcommand};
 use clap_complete::aot::PowerShell;
-use std::{env, io, path::PathBuf, sync::LazyLock};
+use std::{env, io, path::PathBuf, process::Command, sync::LazyLock};
 use util::self_update;
 
 static PLUGIN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
@@ -92,6 +92,10 @@ enum TopCommand {
 	Restart,
 
 	#[clap()]
+	/// Open config file in default editor
+	Edit,
+
+	#[clap()]
 	/// Self update to latest
 	SelfUpdate,
 
@@ -174,6 +178,12 @@ fn main() {
 					}
 				}
 				TopCommand::Remove { name } => config.remove(name),
+				TopCommand::Edit => {
+					_ = Command::new("cmd")
+						.args(["/c", (*CONFIG_PATH).to_str().unwrap()])
+						.status()
+						.unwrap_or_else(|e| exit!(e))
+				}
 				TopCommand::Pin { cmd } => match cmd {
 					PinSubcommand::Add { name } => config.pin_add(name),
 					PinSubcommand::List => config.pin_list(),

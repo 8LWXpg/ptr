@@ -1,5 +1,11 @@
 # Change Log
 
+## [unreleased]
+
+### Added
+
+- Added `edit` subcommand that opens `version.toml` in default editor.
+
 ## [0.12.0]
 
 ### Added
