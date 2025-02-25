@@ -56,6 +56,11 @@ impl Config {
 		}
 	}
 
+	/// Try to find plugins and add to config
+	pub fn init() -> Result<()> {
+		todo!()
+	}
+
 	/// Ignore configs unrelated to plugins.
 	pub fn import() -> Result<Self> {
 		let pt_path = get_powertoys_path()?;
