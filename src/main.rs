@@ -4,6 +4,7 @@ mod util;
 
 use clap::{builder::styling, CommandFactory, Parser, Subcommand};
 use clap_complete::aot::PowerShell;
+use colored::Colorize;
 use std::{env, io, path::PathBuf, process::Command, sync::LazyLock};
 use util::self_update;
 
@@ -31,6 +32,10 @@ struct App {
 
 #[derive(Subcommand)]
 enum TopCommand {
+	#[clap()]
+	/// Try to find and add existing plugins to config
+	Init,
+
 	#[clap(visible_alias = "a", arg_required_else_help = true)]
 	/// Add a plugin
 	Add {
@@ -141,6 +146,23 @@ fn get_styles() -> clap::builder::Styles {
 fn main() {
 	let args = App::parse();
 	match args.cmd {
+		TopCommand::Init => {
+			if PathBuf::from(&*CONFIG_PATH).exists()
+				&& util::prompt("Found existing config, override? [y/N]: ")
+					.unwrap_or_else(|e| exit!(e))
+					!= "y"
+			{
+				return;
+			}
+			let config = config::Config::init().unwrap_or_else(|e| exit!(e));
+			println!("{}", config);
+			println!(
+				"{} Some plugin may failed to find due to incomplete metadata.",
+				"Note:".bright_blue()
+			);
+			println!("      If that occurs, please contact the plugin author.");
+			config.save().unwrap_or_else(|e| exit!(e));
+		}
 		TopCommand::Import { dry_run } => {
 			let mut config = config::Config::import().unwrap_or_else(|e| exit!(e));
 			if dry_run {

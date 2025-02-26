@@ -2,12 +2,13 @@ use anyhow::{bail, Result};
 use colored::Colorize;
 use core::fmt;
 use serde::{Deserialize, Serialize, Serializer};
-use std::collections::HashSet;
-use std::collections::{hash_map::Entry, BTreeMap, HashMap};
+use std::borrow::Cow;
+use std::collections::{hash_map::Entry, BTreeMap, HashMap, HashSet};
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use tabwriter::TabWriter;
+use windows::Win32::UI::Shell::COMP_ELEM_SIZE_HEIGHT;
 
 use crate::polling;
 use crate::util::{get_powertoys_path, kill_ptr, start_ptr};
@@ -27,6 +28,14 @@ pub struct Config {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ImportConfig {
 	plugins: HashMap<String, Plugin>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PluginMetadata {
+	#[serde(rename = "Version")]
+	version: String,
+	#[serde(rename = "Website")]
+	website: String,
 }
 
 fn sort_keys<T, S>(value: &HashMap<String, T>, serializer: S) -> Result<S::Ok, S::Error>
@@ -54,6 +63,62 @@ impl Config {
 				plugins: HashMap::new(),
 			})
 		}
+	}
+
+	/// Try to find plugins and add to config
+	pub fn init() -> Result<Self> {
+		let plugins: HashMap<String, Plugin> = fs::read_dir(&*PLUGIN_PATH)?
+			.filter_map(Result::ok)
+			.filter(|e| e.path().is_dir())
+			.filter_map(|d| {
+				let path = d.path();
+				let dir_name = path.file_name()?.to_string_lossy().to_string();
+				let metadata_path = path.join("plugin.json");
+				if !metadata_path.exists() {
+					return None;
+				}
+				// strip bom from utf8 with bom
+				let content = fs::read_to_string(metadata_path).ok()?;
+				let content: Cow<str> = if let Some(stripped) = content.strip_prefix("\u{FEFF}") {
+					stripped.into()
+				} else {
+					content.into()
+				};
+
+				let metadata: PluginMetadata = serde_json::from_str(&content)
+					.inspect_err(|e| {
+						error!(format!(
+							"failed to deserialize {}/plugin.json: {}",
+							dir_name, e
+						))
+					})
+					.ok()?;
+				Some((
+					dir_name,
+					Plugin {
+						repo: metadata
+							.website
+							.strip_prefix("https://github.com/")
+							.or_else(|| {
+								error!(format!("invalid website url: {}", metadata.website));
+								None
+							})?
+							.to_string(),
+						version: metadata.version,
+						pattern: None,
+					},
+				))
+			})
+			.collect();
+		let pt_path = get_powertoys_path()?;
+
+		Ok(Self {
+			arch: Arch::default(),
+			pt_path,
+			admin: true,
+			pin: None,
+			plugins,
+		})
 	}
 
 	/// Ignore configs unrelated to plugins.
@@ -85,12 +150,13 @@ impl Config {
 		let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
 		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for (name, plugin) in &mut self.plugins {
-			match plugin.force_update(name, &self.arch) {
-				Ok(()) => {
-					add!(name, &plugin.version);
-					new_plugins.insert(name.clone(), plugin.clone());
-				}
-				Err(e) => exit!("Failed to import {}: {}", name, e),
+			if let Err(e) = plugin.force_update(name, &self.arch) {
+				start_ptr(&self.pt_path)
+					.unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+				exit!("Failed to import {}: {}", name, e)
+			} else {
+				add!(name, &plugin.version);
+				new_plugins.insert(name.clone(), plugin.clone());
 			}
 		}
 		start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
@@ -129,26 +195,10 @@ impl Config {
 				.split_at_checked(versions.len())
 				.unwrap_or((&names, &[]));
 			for (name, version) in with_versions.iter().zip(versions) {
-				if let Some(plugin) = self.plugins.get_mut(name) {
-					match plugin.update_to(name, &self.arch, &version) {
-						Ok(updated) => {
-							if updated {
-								add!(name, plugin.version)
-							} else {
-								up_to_date!(name, plugin.version)
-							}
-						}
-						Err(e) => error!("Failed to update {}: {}", name, e),
-					}
-				}
-			}
-			without_versions
-		} else {
-			&names
-		};
-		for name in without_versions {
-			if let Some(plugin) = self.plugins.get_mut(name) {
-				match plugin.update(name, &self.arch) {
+				let Some(plugin) = self.plugins.get_mut(name) else {
+					continue;
+				};
+				match plugin.update_to(name, &self.arch, &version) {
 					Ok(updated) => {
 						if updated {
 							add!(name, plugin.version)
@@ -158,6 +208,24 @@ impl Config {
 					}
 					Err(e) => error!("Failed to update {}: {}", name, e),
 				}
+			}
+			without_versions
+		} else {
+			&names
+		};
+		for name in without_versions {
+			let Some(plugin) = self.plugins.get_mut(name) else {
+				continue;
+			};
+			match plugin.update(name, &self.arch) {
+				Ok(updated) => {
+					if updated {
+						add!(name, plugin.version)
+					} else {
+						up_to_date!(name, plugin.version)
+					}
+				}
+				Err(e) => error!("Failed to update {}: {}", name, e),
 			}
 		}
 		start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
@@ -192,14 +260,15 @@ impl Config {
 	pub fn remove(&mut self, names: Vec<String>) {
 		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for name in names {
-			if let Some(plugin) = self.plugins.get(&name) {
-				match plugin.remove(&name) {
-					Ok(_) => {
-						self.plugins.remove(&name);
-						remove!(name);
-					}
-					Err(e) => error!("Failed to remove {}: {}", name, e),
+			let Some(plugin) = self.plugins.get(&name) else {
+				continue;
+			};
+			match plugin.remove(&name) {
+				Ok(_) => {
+					self.plugins.remove(&name);
+					remove!(name);
 				}
+				Err(e) => error!("Failed to remove {}: {}", name, e),
 			}
 		}
 		start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
@@ -208,7 +277,7 @@ impl Config {
 	}
 
 	pub fn pin_add(&mut self, names: Vec<String>) {
-		if let Some(pins) = self.pin.as_mut() {
+		if let Some(pins) = &mut self.pin {
 			names.into_iter().for_each(|n| {
 				pins.insert(n);
 			});
@@ -220,19 +289,18 @@ impl Config {
 	}
 
 	pub fn pin_remove(&mut self, names: Vec<String>) {
-		if let Some(pins) = self.pin.as_mut() {
-			names.iter().for_each(|n| {
-				pins.remove(n);
-			});
-		} else {
-			self.pin = Some(HashSet::from_iter(names));
-		}
+		let Some(pins) = &mut self.pin else {
+			return;
+		};
+		names.iter().for_each(|n| {
+			pins.remove(n);
+		});
 		self.save()
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
 
 	pub fn pin_list(&self) {
-		if let Some(pins) = self.pin.as_ref() {
+		if let Some(pins) = &self.pin {
 			pins.iter().for_each(|n| println!("{n}"));
 		}
 	}
@@ -256,7 +324,7 @@ impl fmt::Display for Config {
 				name.bright_cyan(),
 				plugin.repo,
 				plugin.version,
-				match plugin.pattern.as_ref() {
+				match &plugin.pattern {
 					Some(pattern) => pattern,
 					None => "",
 				},

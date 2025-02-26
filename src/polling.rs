@@ -42,5 +42,5 @@ where
 
 /// Wrapper around `fs::remove_dir_all` that retries on errors.
 pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
-	retry(|| fs::remove_dir_all(path.as_ref()))
+	retry(|| fs::remove_dir_all(&path))
 }
