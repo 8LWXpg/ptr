@@ -10,8 +10,9 @@
             "name": "Debug executable 'ptr'",
             "program": "${workspaceRoot}/target/debug/${workspaceFolderBasename}.exe",
             "args": [
-                "self-update",
+                "init",
             ],
+            "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "rust: cargo build"
         },

@@ -239,7 +239,7 @@ pub fn get_powertoys_path() -> Result<PathBuf> {
 }
 
 /// Prompt the user for string input.
-fn prompt(msg: &str) -> Result<String> {
+pub fn prompt(msg: &str) -> Result<String> {
 	let mut input = String::new();
 	print!("{msg}");
 	io::stdout().flush()?;
