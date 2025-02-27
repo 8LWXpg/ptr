@@ -8,7 +8,6 @@ use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use tabwriter::TabWriter;
-use windows::Win32::UI::Shell::COMP_ELEM_SIZE_HEIGHT;
 
 use crate::polling;
 use crate::util::{get_powertoys_path, kill_ptr, start_ptr};
@@ -72,7 +71,7 @@ impl Config {
 			.filter(|e| e.path().is_dir())
 			.filter_map(|d| {
 				let path = d.path();
-				let dir_name = path.file_name()?.to_string_lossy().to_string();
+				let dir_name = path.file_name()?.to_str()?;
 				let metadata_path = path.join("plugin.json");
 				if !metadata_path.exists() {
 					return None;
@@ -88,19 +87,22 @@ impl Config {
 				let metadata: PluginMetadata = serde_json::from_str(&content)
 					.inspect_err(|e| {
 						error!(format!(
-							"failed to deserialize {}/plugin.json: {}",
+							"failed to deserialize '{}/plugin.json': {}",
 							dir_name, e
 						))
 					})
 					.ok()?;
 				Some((
-					dir_name,
+					dir_name.into(),
 					Plugin {
 						repo: metadata
 							.website
 							.strip_prefix("https://github.com/")
 							.or_else(|| {
-								error!(format!("invalid website url: {}", metadata.website));
+								error!(format!(
+									"invalid website url in {}: '{}'",
+									dir_name, metadata.website
+								));
 								None
 							})?
 							.to_string(),

@@ -1,10 +1,15 @@
 # Change Log
 
-## [unreleased]
+## [0.13.0]
 
 ### Added
 
 - Added `edit` subcommand that opens `version.toml` in default editor.
+- Added `init` subcommand that try to find and add existing plugins to config
+
+### Fixed
+
+- Fixed `pin remove`.
 
 ## [0.12.0]
 

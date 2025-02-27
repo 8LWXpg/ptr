@@ -24,11 +24,32 @@ cargo install --git https://github.com/8LWXpg/ptr.git
 
 ## Quick Start
 
+### For New Plugins
+
 Install a plugin with `add`:
 
 ```
 ptr add GitHubRepo 8LWXpg/PowerToysRun-GitHubRepo
 ```
+
+### For Existing Plugins
+
+Add existing plugins with `init`:
+
+```
+ptr init
+```
+
+> [!NOTE]
+> This overrides existing config
+
+Then update with
+
+```
+ptr update --all
+```
+
+### Useful tips
 
 A config file will be created at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml`. While not necessary, you can manually modify it if desired. For the generated config structure, refer to [`test.toml`](./test/test.toml).
 
@@ -68,6 +89,7 @@ PowerToys Run Plugin Manager
 Usage: ptr.exe <COMMAND>
 
 Commands:
+  init         Try to find and add existing plugins to config
   add          Add a plugin [aliases: a]
   update       Update plugins [aliases: u]
   remove       Remove plugins [aliases: r]
@@ -75,6 +97,7 @@ Commands:
   pin          Pin plugins so it's not updated with `update --all` [aliases: p]
   import       Import plugins from configuration file [aliases: i]
   restart      Restart PowerToys
+  edit         Open config file in default editor
   self-update  Self update to latest
   completion   Generate shell completion (PowerShell)
   help         Print this message or the help of the given subcommand(s)
@@ -82,6 +105,17 @@ Commands:
 Options:
   -h, --help     Print help
   -V, --version  Print version
+```
+
+### Init
+
+```init --help
+Try to find and add existing plugins to config
+
+Usage: ptr.exe init
+
+Options:
+  -h, --help  Print help
 ```
 
 ### Add
@@ -195,6 +229,12 @@ Options:
 
 ```
 Usage: ptr.exe restart
+```
+
+### Edit
+
+```
+Usage: ptr.exe edit
 ```
 
 ### Self Update
