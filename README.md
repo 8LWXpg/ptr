@@ -2,7 +2,7 @@
 
 ![preview](https://github.com/user-attachments/assets/94489f6f-0301-4427-8c44-2f801201c64f)
 
-Install and manage any PowerToys plugin released on GitHub with single command line interface.
+Manage any PowerToys plugin released on GitHub with single command line interface.
 
 ## Installation
 
