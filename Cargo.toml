@@ -10,7 +10,7 @@ edition = "2021"
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }{ archive-suffix }"
-bin-dir = "{ name }-{ target }-v{ version }/{ bin }{ binary-ext }"
+bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "zip"
 disabled-strategies = ["quick-install", "compile"]
 
