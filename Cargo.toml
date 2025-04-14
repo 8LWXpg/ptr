@@ -3,6 +3,12 @@ name = "ptr"
 version = "0.13.0"
 edition = "2021"
 
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }{ archive-suffix }"
+bin-dir = "{ name }-{ target }-v{ version }/{ bin }{ binary-ext }"
+pkg-fmt = "zip"
+disabled-strategies = ["quick-install", "compile"]
+
 [dependencies]
 anyhow = "1.0.95"
 clap = { version = "4.5.26", features = ["derive"] }
