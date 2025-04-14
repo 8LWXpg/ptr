@@ -8,7 +8,13 @@ Install and manage any PowerToys Run plugin released on GitHub with single comma
 
 Download binary from [releases](https://github.com/8LWXpg/ptr/releases) page.
 
-or build from source:
+using `cargo-binstall`:
+
+```
+cargo binstall --git https://github.com/8LWXpg/ptr ptr
+```
+
+build from source:
 
 ```
 cargo install --git https://github.com/8LWXpg/ptr.git
