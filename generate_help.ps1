@@ -3,7 +3,7 @@ Set-Location $PSScriptRoot
 
 cargo build
 
-$file = '.\README.md'
+$file = '.\usage.md'
 $content = Get-Content $file -Raw
 [regex]::Replace($content, '```(?!pwsh)(.+)\n[\s\S]+?```' , { param([System.Text.RegularExpressions.Match]$match)
 		"``````$($match.Groups[1])

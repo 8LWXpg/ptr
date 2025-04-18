@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.14.0]
+
+### Added
+
+- Added `token` field in config that used when sending request to GitHub.
+
 ## [0.13.0]
 
 ### Added
