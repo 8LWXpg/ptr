@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Ok, Result};
 use colored::Colorize;
 use regex::Regex;
 use reqwest::blocking::Client;
-use reqwest::header::{HeaderMap, ACCEPT, USER_AGENT};
+use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, USER_AGENT};
 use serde::Deserialize;
 use std::fs::{self, File};
 use std::io::{self, Write};
@@ -40,10 +40,10 @@ impl Assets {
 
 #[macro_export]
 macro_rules! gh_dl {
-	($root_name:expr, $repo:expr, $version:expr, $arch:expr, $pattern:expr) => {
-		$crate::util::gh_dl($root_name, $repo, $version, $arch, None, $pattern)
+	($root_name:expr, $repo:expr, $version:expr, $arch:expr, $pattern:expr, $token:expr) => {
+		$crate::util::gh_dl($root_name, $repo, $version, $arch, None, $pattern, $token)
 	};
-	($root_name:expr, $repo:expr, $version:expr, $arch:expr, $current_version:expr, $pattern:expr) => {
+	($root_name:expr, $repo:expr, $version:expr, $arch:expr, $current_version:expr, $pattern:expr, $token:expr) => {
 		$crate::util::gh_dl(
 			$root_name,
 			$repo,
@@ -51,6 +51,7 @@ macro_rules! gh_dl {
 			$arch,
 			Some($current_version),
 			$pattern,
+			$token,
 		)
 	};
 }
@@ -59,11 +60,12 @@ macro_rules! gh_dl {
 ///
 /// # Arguments
 ///
-/// * `repo` - The repository to download from.
-/// * `version` - The tagged version of the repository to download.
-/// * `arch` - The architecture of the system, either x64 or arm64.
-/// * `current_version` - The current version of the repository that is installed.
-/// * `pattern` - match pattern for assets
+/// * `repo` - Repository identifier.
+/// * `version` - Tagged version.
+/// * `arch` - Architecture of the system, either x64 or arm64.
+/// * `current_version` - Current tagged version.
+/// * `pattern` - Match pattern for assets.
+/// * `token` - GitHub auth token.
 ///
 /// # Returns
 /// The version of the repository that was downloaded.
@@ -74,6 +76,7 @@ pub fn gh_dl(
 	arch: &Arch,
 	current_version: Option<&str>,
 	pattern: Option<&str>,
+	token: Option<&str>,
 ) -> Result<String> {
 	let url = if let Some(version) = version {
 		format!("https://api.github.com/repos/{repo}/releases/tags/{version}")
@@ -84,6 +87,9 @@ pub fn gh_dl(
 	headers.insert(USER_AGENT, "reqwest".parse().unwrap());
 	headers.insert(ACCEPT, "application/vnd.github+json".parse().unwrap());
 	headers.insert("X-GitHub-Api-Version", "2022-11-28".parse().unwrap());
+	if let Some(token) = token {
+		headers.insert(AUTHORIZATION, format!("Bearer {token}").parse().unwrap());
+	}
 	let res = Client::new().get(&url).headers(headers).send()?;
 	if !res.status().is_success() {
 		bail!(

@@ -2,6 +2,7 @@ arch = "x64"
 pt_path = "C:/Program Files/PowerToys/PowerToys.exe"
 admin = true
 pins = ["GitHubRepo"]
+token = 'token'
 
 [plugins.GitHubRepo]
 repo = "8LWXpg/PowerToysRun-GitHubRepo"

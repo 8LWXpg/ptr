@@ -20,6 +20,8 @@ pub struct Config {
 	/// Kill and run as admin
 	admin: bool,
 	pin: Option<HashSet<String>>,
+	/// GitHub auth token
+	token: Option<String>,
 	#[serde(serialize_with = "sort_keys")]
 	plugins: HashMap<String, Plugin>,
 }
@@ -59,6 +61,7 @@ impl Config {
 				pt_path,
 				admin: true,
 				pin: None,
+				token: None,
 				plugins: HashMap::new(),
 			})
 		}
@@ -119,6 +122,7 @@ impl Config {
 			pt_path,
 			admin: true,
 			pin: None,
+			token: None,
 			plugins,
 		})
 	}
@@ -133,6 +137,7 @@ impl Config {
 			pt_path,
 			admin: true,
 			pin: None,
+			token: None,
 			plugins: import_config.plugins,
 		})
 	}
@@ -152,7 +157,7 @@ impl Config {
 		let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
 		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for (name, plugin) in &mut self.plugins {
-			if let Err(e) = plugin.force_update(name, &self.arch) {
+			if let Err(e) = plugin.force_update(name, &self.arch, self.token.as_deref()) {
 				start_ptr(&self.pt_path)
 					.unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
 				exit!("Failed to import {}: {}", name, e)
@@ -177,7 +182,14 @@ impl Config {
 		if let Entry::Vacant(e) = self.plugins.entry(name.to_string()) {
 			kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 			let version = &e
-				.insert(Plugin::add(name, repo, version, &self.arch, pattern)?)
+				.insert(Plugin::add(
+					name,
+					repo,
+					version,
+					&self.arch,
+					pattern,
+					self.token.as_deref(),
+				)?)
 				.version;
 			add!(name, version);
 			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
@@ -200,7 +212,7 @@ impl Config {
 				let Some(plugin) = self.plugins.get_mut(name) else {
 					continue;
 				};
-				match plugin.update_to(name, &self.arch, &version) {
+				match plugin.update_to(name, &self.arch, &version, self.token.as_deref()) {
 					Ok(updated) => {
 						if updated {
 							add!(name, plugin.version)
@@ -219,7 +231,7 @@ impl Config {
 			let Some(plugin) = self.plugins.get_mut(name) else {
 				continue;
 			};
-			match plugin.update(name, &self.arch) {
+			match plugin.update(name, &self.arch, self.token.as_deref()) {
 				Ok(updated) => {
 					if updated {
 						add!(name, plugin.version)
@@ -243,7 +255,7 @@ impl Config {
 					continue;
 				}
 			}
-			match plugin.update(name, &self.arch) {
+			match plugin.update(name, &self.arch, self.token.as_deref()) {
 				Ok(updated) => {
 					if updated {
 						add!(name, plugin.version)
@@ -384,8 +396,16 @@ impl Plugin {
 		version: Option<String>,
 		arch: &Arch,
 		pattern: Option<String>,
+		token: Option<&str>,
 	) -> Result<Self> {
-		let version = gh_dl!(name, &repo, version.as_deref(), arch, pattern.as_deref())?;
+		let version = gh_dl!(
+			name,
+			&repo,
+			version.as_deref(),
+			arch,
+			pattern.as_deref(),
+			token
+		)?;
 		Ok(Self {
 			repo,
 			version,
@@ -395,14 +415,15 @@ impl Plugin {
 
 	/// Update the plugin to the latest version.
 	/// Return `true` if the version is updated.
-	fn update(&mut self, name: &str, arch: &Arch) -> Result<bool> {
+	fn update(&mut self, name: &str, arch: &Arch, token: Option<&str>) -> Result<bool> {
 		let version = gh_dl!(
 			name,
 			&self.repo,
 			None,
 			arch,
 			&self.version,
-			self.pattern.as_deref()
+			self.pattern.as_deref(),
+			token
 		)?;
 		if version != self.version {
 			self.version = version;
@@ -414,14 +435,21 @@ impl Plugin {
 
 	/// Update the plugin to specific version.
 	/// Return `true` if the version is updated.
-	fn update_to(&mut self, name: &str, arch: &Arch, version: &str) -> Result<bool> {
+	fn update_to(
+		&mut self,
+		name: &str,
+		arch: &Arch,
+		version: &str,
+		token: Option<&str>,
+	) -> Result<bool> {
 		let version = gh_dl!(
 			name,
 			&self.repo,
 			Some(version),
 			arch,
 			&self.version,
-			self.pattern.as_deref()
+			self.pattern.as_deref(),
+			token
 		)?;
 		if version != self.version {
 			self.version = version;
@@ -432,14 +460,15 @@ impl Plugin {
 	}
 
 	/// Update without checking current version.
-	fn force_update(&mut self, name: &str, arch: &Arch) -> Result<()> {
+	fn force_update(&mut self, name: &str, arch: &Arch, token: Option<&str>) -> Result<()> {
 		let version = gh_dl!(
 			name,
 			&self.repo,
 			None,
 			arch,
 			&self.version,
-			self.pattern.as_deref()
+			self.pattern.as_deref(),
+			token
 		)?;
 		self.version = version;
 		Ok(())
@@ -464,6 +493,7 @@ mod tests {
 			arch: Arch::X64,
 			admin: true,
 			pin: None,
+			token: None,
 			pt_path: "C:/Program Files/PowerToys/PowerToys.exe".into(),
 			plugins: HashMap::new(),
 		};
