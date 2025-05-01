@@ -78,18 +78,9 @@ Use alias to type commands faster:
 ptr u -a
 ```
 
-## Limitations
-
-If you have any suggestions for these limitations, feel free to open an issue.
-
-- This tool only supports plugins hosted on GitHub.
-- The plugin release must be a zip file with either `x64` or `arm64` in the file name, or a pattern from `--pattern` is required.
-
-For more general pattern matching and downloading, check another tool I wrote: [gpm](https://github.com/8LWXpg/gpm).
-
 ## Config
 
-The following config needs to modify manually:
+The following config needs to modify manually at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml`:
 
 ```toml
 admin = true    # Whether start and kill as admin
@@ -101,6 +92,15 @@ For the generated config structure, refer to [`test.toml`](./test/test.toml).
 ## Usage
 
 Check [usage.md](./usage.md)
+
+## Limitations
+
+If you have any suggestions for these limitations, feel free to open an issue.
+
+- This tool only supports plugins hosted on GitHub.
+- The plugin release must be a zip file with either `x64` or `arm64` in the file name, or a pattern from `--pattern` is required.
+
+For more general pattern matching and downloading, check another tool I wrote: [gpm](https://github.com/8LWXpg/gpm).
 
 ## Why Rust?
 
