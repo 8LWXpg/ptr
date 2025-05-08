@@ -155,7 +155,7 @@ fn main() {
 				return;
 			}
 			let config = config::Config::init().unwrap_or_else(|e| exit!(e));
-			println!("{}", config);
+			println!("{config}");
 			println!(
 				"{} Some plugin may failed to find due to incomplete metadata.",
 				"Note:".bright_blue()
