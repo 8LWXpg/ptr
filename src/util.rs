@@ -149,7 +149,7 @@ fn extract_zip(zip_path: &Path, root_name: &str) -> Result<()> {
 	let mut archive = ZipArchive::new(File::open(zip_path)?)?;
 	env::set_current_dir(&*PLUGIN_PATH)?;
 
-	// locate for .dll file and find it's parent
+	// Locate for.dll file and find it's parent
 	let dll = archive
 		.file_names()
 		.find(|f| f.ends_with(".dll"))
@@ -157,7 +157,7 @@ fn extract_zip(zip_path: &Path, root_name: &str) -> Result<()> {
 		.to_owned();
 	let parent = Path::new(&dll).parent().unwrap_or(Path::new(""));
 
-	// extract all files and keep the directory structure
+	// Extract all files and keep the directory structure
 	let root = PathBuf::from(root_name);
 	for i in 0..archive.len() {
 		let mut file = archive.by_index(i)?;
@@ -321,7 +321,7 @@ macro_rules! add {
 	};
 }
 
-/// print message for item that is up to date.
+/// Print message for item that is up to date.
 ///
 /// Works like `println!`.
 #[macro_export]
@@ -331,7 +331,7 @@ macro_rules! up_to_date {
 	};
 }
 
-/// print message for removing an item.
+/// Print message for removing an item.
 ///
 /// Works like `println!`.
 #[macro_export]
@@ -354,7 +354,7 @@ macro_rules! error {
     }};
 }
 
-/// Print a error message to stderr and exit with code 0.
+/// Print an error message to stderr and exit with code 0.
 #[macro_export]
 macro_rules! exit {
     ($($arg:tt)*) => {{

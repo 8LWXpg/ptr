@@ -79,7 +79,7 @@ impl Config {
 				if !metadata_path.exists() {
 					return None;
 				}
-				// strip bom from utf8 with bom
+				// Strip bom from utf8 with bom
 				let content = fs::read_to_string(metadata_path).ok()?;
 				let content: Cow<str> = if let Some(stripped) = content.strip_prefix("\u{FEFF}") {
 					stripped.into()

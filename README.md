@@ -100,7 +100,7 @@ Check [usage.md](./usage.md)
 If you have any suggestions for these limitations, feel free to open an issue.
 
 - This tool only supports plugins hosted on GitHub.
-- The plugin release must be a zip file with either `x64` or `arm64` in the file name, or a pattern from `--pattern` is required.
+- The plugin release must be a zip file with either `x64` or `arm64` in the filename, or a pattern from `--pattern` is required.
 
 For more general pattern matching and downloading, check another tool I wrote: [gpm](https://github.com/8LWXpg/gpm).
 
