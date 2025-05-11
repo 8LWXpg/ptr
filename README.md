@@ -87,6 +87,7 @@ The following config needs to modify manually at `%LOCALAPPDATA%\Microsoft\Power
 ```toml
 admin = true    # Whether start and kill as admin
 token = 'token' # Token used when making request to GitHub.
+no_restart = false  # Set true to not restart PowerToys after plugin modification
 ```
 
 For the generated config structure, refer to [`test.toml`](./test/test.toml).

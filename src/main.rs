@@ -28,6 +28,10 @@ static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 struct App {
 	#[clap(subcommand)]
 	cmd: TopCommand,
+
+	#[clap(default_value = "false", long)]
+	/// Do not restart PowerToys after plugin modification
+	no_restart: bool,
 }
 
 #[derive(Subcommand)]
@@ -168,7 +172,7 @@ fn main() {
 			if dry_run {
 				config.save().unwrap_or_else(|e| exit!(e));
 			} else {
-				config.import_plugins();
+				config.import_plugins(args.no_restart);
 			}
 		}
 		TopCommand::SelfUpdate => self_update().unwrap_or_else(|e| exit!(e)),
@@ -190,16 +194,17 @@ fn main() {
 						},
 						version,
 						pattern,
+						args.no_restart,
 					)
 					.unwrap_or_else(|e| exit!(e)),
 				TopCommand::Update { name, all, version } => {
 					if all {
-						config.update_all();
+						config.update_all(args.no_restart);
 					} else {
-						config.update(name, version);
+						config.update(name, version, args.no_restart);
 					}
 				}
-				TopCommand::Remove { name } => config.remove(name),
+				TopCommand::Remove { name } => config.remove(name, args.no_restart),
 				TopCommand::Edit => {
 					_ = Command::new("cmd")
 						.args(["/c", (*CONFIG_PATH).to_str().unwrap()])

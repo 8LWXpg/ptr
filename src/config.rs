@@ -19,9 +19,11 @@ pub struct Config {
 	pt_path: PathBuf,
 	/// Kill and run as admin
 	admin: bool,
+	/// Do not restart PowerToys after plugin modification
+	no_restart: bool,
+	token: Option<String>,
 	pin: Option<HashSet<String>>,
 	/// GitHub auth token
-	token: Option<String>,
 	#[serde(serialize_with = "sort_keys")]
 	plugins: HashMap<String, Plugin>,
 }
@@ -32,6 +34,7 @@ pub struct ImportConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+/// plugin.json metadata
 pub struct PluginMetadata {
 	#[serde(rename = "Version")]
 	version: String,
@@ -60,8 +63,9 @@ impl Config {
 				arch: Arch::default(),
 				pt_path,
 				admin: true,
-				pin: None,
+				no_restart: false,
 				token: None,
+				pin: None,
 				plugins: HashMap::new(),
 			})
 		}
@@ -121,8 +125,9 @@ impl Config {
 			arch: Arch::default(),
 			pt_path,
 			admin: true,
-			pin: None,
+			no_restart: false,
 			token: None,
+			pin: None,
 			plugins,
 		})
 	}
@@ -136,8 +141,9 @@ impl Config {
 			arch: Arch::default(),
 			pt_path,
 			admin: true,
-			pin: None,
+			no_restart: false,
 			token: None,
+			pin: None,
 			plugins: import_config.plugins,
 		})
 	}
@@ -153,20 +159,25 @@ impl Config {
 		start_ptr(&self.pt_path).unwrap_or_else(|e| exit!("Failed to start PowerToys: {}", e));
 	}
 
-	pub fn import_plugins(&mut self) {
+	pub fn import_plugins(&mut self, no_restart: bool) {
+		let no_restart = no_restart || self.no_restart;
 		let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
 		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for (name, plugin) in &mut self.plugins {
 			if let Err(e) = plugin.force_update(name, &self.arch, self.token.as_deref()) {
-				start_ptr(&self.pt_path)
-					.unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+				if !no_restart {
+					start_ptr(&self.pt_path)
+						.unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+				}
 				exit!("Failed to import {}: {}", name, e)
 			} else {
 				add!(name, &plugin.version);
 				new_plugins.insert(name.clone(), plugin.clone());
 			}
 		}
-		start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+		if !no_restart {
+			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+		}
 		self.plugins = new_plugins;
 		self.save()
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
@@ -178,8 +189,10 @@ impl Config {
 		repo: String,
 		version: Option<String>,
 		pattern: Option<String>,
+		no_restart: bool,
 	) -> Result<()> {
 		if let Entry::Vacant(e) = self.plugins.entry(name.to_string()) {
+			let no_restart = no_restart || self.no_restart;
 			kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 			let version = &e
 				.insert(Plugin::add(
@@ -192,7 +205,10 @@ impl Config {
 				)?)
 				.version;
 			add!(name, version);
-			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+			if !no_restart {
+				start_ptr(&self.pt_path)
+					.unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+			}
 			self.save()?;
 			Ok(())
 		} else {
@@ -200,7 +216,8 @@ impl Config {
 		}
 	}
 
-	pub fn update(&mut self, names: Vec<String>, versions: Option<Vec<String>>) {
+	pub fn update(&mut self, names: Vec<String>, versions: Option<Vec<String>>, no_restart: bool) {
+		let no_restart = no_restart || self.no_restart;
 		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 
 		// Update plugins with versions first.
@@ -242,12 +259,15 @@ impl Config {
 				Err(e) => error!("Failed to update {}: {}", name, e),
 			}
 		}
-		start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+		if !no_restart {
+			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+		}
 		self.save()
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
 
-	pub fn update_all(&mut self) {
+	pub fn update_all(&mut self, no_restart: bool) {
+		let no_restart = no_restart || self.no_restart;
 		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for (name, plugin) in &mut self.plugins {
 			if let Some(pins) = &self.pin {
@@ -266,12 +286,15 @@ impl Config {
 				Err(e) => error!("Failed to update {}: {}", name, e),
 			}
 		}
-		start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+		if !no_restart {
+			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+		}
 		self.save()
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
 
-	pub fn remove(&mut self, names: Vec<String>) {
+	pub fn remove(&mut self, names: Vec<String>, no_restart: bool) {
+		let no_restart = no_restart || self.no_restart;
 		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
 		for name in names {
 			let Some(plugin) = self.plugins.get(&name) else {
@@ -285,7 +308,9 @@ impl Config {
 				Err(e) => error!("Failed to remove {}: {}", name, e),
 			}
 		}
-		start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+		if !no_restart {
+			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+		}
 		self.save()
 			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
 	}
@@ -492,6 +517,7 @@ mod tests {
 		let config = Config {
 			arch: Arch::X64,
 			admin: true,
+			no_restart: false,
 			pin: None,
 			token: None,
 			pt_path: "C:/Program Files/PowerToys/PowerToys.exe".into(),

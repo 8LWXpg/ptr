@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.15.0]
+
+### Added
+
+- Added `--no-restart` top level option.
+- Added `no_restart` field in config.
+
 ## [0.14.0]
 
 ### Added
