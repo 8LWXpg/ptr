@@ -3,7 +3,7 @@
 ```help
 PowerToys Run Plugin Manager
 
-Usage: ptr.exe <COMMAND>
+Usage: ptr.exe [OPTIONS] <COMMAND>
 
 Commands:
   init         Try to find and add existing plugins to config
@@ -20,8 +20,9 @@ Commands:
   help         Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help     Print help
-  -V, --version  Print version
+      --no-restart  Do not restart PowerToys after plugin modification
+  -h, --help        Print help
+  -V, --version     Print version
 ```
 
 ## Init
