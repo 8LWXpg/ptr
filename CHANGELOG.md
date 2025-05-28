@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+### Changed
+
+- Optimized for binary size.
+
 ## [0.15.0]
 
 ### Added
