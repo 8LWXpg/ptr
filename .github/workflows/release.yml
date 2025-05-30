@@ -31,7 +31,7 @@ jobs:
     - name: Archive
       run: 7z a "ptr-${{ matrix.target }}.zip" README.md LICENSE ./target/${{ matrix.target }}/release/ptr.exe
 
-    - uses: ncipollo/release-action@v1.14.0
+    - uses: ncipollo/release-action@v1
       with:
         artifacts: "ptr-${{ matrix.target }}.zip"
         allowUpdates: true
