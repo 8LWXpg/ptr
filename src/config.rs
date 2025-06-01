@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use core::fmt;
 use serde::{Deserialize, Serialize, Serializer};
@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use tabwriter::TabWriter;
 
 use crate::polling;
-use crate::util::{get_powertoys_path, kill_ptr, start_ptr};
+use crate::util::{get_powertoys_path, kill_ptr, start_ptr, ResultExit};
 use crate::{add, error, exit, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PATH};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -93,26 +93,24 @@ impl Config {
 
 				let metadata: PluginMetadata = serde_json::from_str(&content)
 					.inspect_err(|e| {
-						error!(format!(
-							"failed to deserialize '{}/plugin.json': {}",
-							dir_name, e
-						))
+						error!("failed to deserialize '{}/plugin.json': {}", dir_name, e)
 					})
 					.ok()?;
+				let repo = metadata
+					.website
+					.strip_prefix("https://github.com/")
+					.or_else(|| {
+						error!(
+							"invalid website url in {}: '{}'",
+							dir_name, metadata.website
+						);
+						None
+					})?
+					.to_string();
 				Some((
 					dir_name.into(),
 					Plugin {
-						repo: metadata
-							.website
-							.strip_prefix("https://github.com/")
-							.or_else(|| {
-								error!(format!(
-									"invalid website url in {}: '{}'",
-									dir_name, metadata.website
-								));
-								None
-							})?
-							.to_string(),
+						repo,
 						version: metadata.version,
 						pattern: None,
 					},
@@ -150,24 +148,24 @@ impl Config {
 
 	/// Note: This method already used in the other methods.
 	pub fn save(&self) -> Result<()> {
-		fs::write(&*CONFIG_PATH, toml::to_string(self)?)?;
+		fs::write(&*CONFIG_PATH, toml::to_string(self).unwrap())
+			.context("Failed to save config")?;
 		Ok(())
 	}
 
 	pub fn restart(&self) {
-		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
-		start_ptr(&self.pt_path).unwrap_or_else(|e| exit!("Failed to start PowerToys: {}", e));
+		kill_ptr(self.admin).exit_on_error();
+		start_ptr(&self.pt_path).exit_on_error();
 	}
 
 	pub fn import_plugins(&mut self, no_restart: bool) {
 		let no_restart = no_restart || self.no_restart;
 		let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
-		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
+		kill_ptr(self.admin).exit_on_error();
 		for (name, plugin) in &mut self.plugins {
 			if let Err(e) = plugin.force_update(name, &self.arch, self.token.as_deref()) {
 				if !no_restart {
-					start_ptr(&self.pt_path)
-						.unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+					start_ptr(&self.pt_path).unwrap_or_else(|e| error!(e));
 				}
 				exit!("Failed to import {}: {}", name, e)
 			} else {
@@ -176,11 +174,10 @@ impl Config {
 			}
 		}
 		if !no_restart {
-			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+			start_ptr(&self.pt_path).unwrap_or_else(|e| error!(e));
 		}
 		self.plugins = new_plugins;
-		self.save()
-			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
+		self.save().exit_on_error();
 	}
 
 	pub fn add(
@@ -193,7 +190,7 @@ impl Config {
 	) -> Result<()> {
 		if let Entry::Vacant(e) = self.plugins.entry(name.to_string()) {
 			let no_restart = no_restart || self.no_restart;
-			kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
+			kill_ptr(self.admin).exit_on_error();
 			let version = &e
 				.insert(Plugin::add(
 					name,
@@ -206,8 +203,7 @@ impl Config {
 				.version;
 			add!(name, version);
 			if !no_restart {
-				start_ptr(&self.pt_path)
-					.unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+				start_ptr(&self.pt_path).unwrap_or_else(|e| error!(e));
 			}
 			self.save()?;
 			Ok(())
@@ -218,7 +214,7 @@ impl Config {
 
 	pub fn update(&mut self, names: Vec<String>, versions: Option<Vec<String>>, no_restart: bool) {
 		let no_restart = no_restart || self.no_restart;
-		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
+		kill_ptr(self.admin).exit_on_error();
 
 		// Update plugins with versions first.
 		let without_versions = if let Some(versions) = versions {
@@ -237,7 +233,7 @@ impl Config {
 							up_to_date!(name, plugin.version)
 						}
 					}
-					Err(e) => error!("Failed to update {}: {}", name, e),
+					Err(e) => error!(e),
 				}
 			}
 			without_versions
@@ -256,19 +252,18 @@ impl Config {
 						up_to_date!(name, plugin.version)
 					}
 				}
-				Err(e) => error!("Failed to update {}: {}", name, e),
+				Err(e) => error!(e),
 			}
 		}
 		if !no_restart {
-			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+			start_ptr(&self.pt_path).unwrap_or_else(|e| error!(e));
 		}
-		self.save()
-			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
+		self.save().exit_on_error();
 	}
 
 	pub fn update_all(&mut self, no_restart: bool) {
 		let no_restart = no_restart || self.no_restart;
-		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
+		kill_ptr(self.admin).exit_on_error();
 		for (name, plugin) in &mut self.plugins {
 			if let Some(pins) = &self.pin {
 				if pins.contains(name) {
@@ -283,19 +278,18 @@ impl Config {
 						up_to_date!(name, plugin.version)
 					}
 				}
-				Err(e) => error!("Failed to update {}: {}", name, e),
+				Err(e) => error!(e),
 			}
 		}
 		if !no_restart {
-			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+			start_ptr(&self.pt_path).unwrap_or_else(|e| error!(e));
 		}
-		self.save()
-			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
+		self.save().exit_on_error();
 	}
 
 	pub fn remove(&mut self, names: Vec<String>, no_restart: bool) {
 		let no_restart = no_restart || self.no_restart;
-		kill_ptr(self.admin).unwrap_or_else(|e| exit!("Failed to kill PowerToys: {}", e));
+		kill_ptr(self.admin).exit_on_error();
 		for name in names {
 			let Some(plugin) = self.plugins.get(&name) else {
 				continue;
@@ -305,14 +299,13 @@ impl Config {
 					self.plugins.remove(&name);
 					remove!(name);
 				}
-				Err(e) => error!("Failed to remove {}: {}", name, e),
+				Err(e) => error!(e),
 			}
 		}
 		if !no_restart {
-			start_ptr(&self.pt_path).unwrap_or_else(|e| error!("Failed to start PowerToys: {}", e));
+			start_ptr(&self.pt_path).unwrap_or_else(|e| error!(e));
 		}
-		self.save()
-			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
+		self.save().exit_on_error();
 	}
 
 	pub fn pin_add(&mut self, names: Vec<String>) {
@@ -323,8 +316,7 @@ impl Config {
 		} else {
 			self.pin = Some(HashSet::from_iter(names));
 		}
-		self.save()
-			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
+		self.save().exit_on_error();
 	}
 
 	pub fn pin_remove(&mut self, names: Vec<String>) {
@@ -334,8 +326,7 @@ impl Config {
 		names.iter().for_each(|n| {
 			pins.remove(n);
 		});
-		self.save()
-			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
+		self.save().exit_on_error();
 	}
 
 	pub fn pin_list(&self) {
@@ -346,8 +337,7 @@ impl Config {
 
 	pub fn pin_reset(&mut self) {
 		self.pin = None;
-		self.save()
-			.unwrap_or_else(|e| exit!("Failed to save config: {}", e));
+		self.save().exit_on_error();
 	}
 }
 
@@ -449,7 +439,8 @@ impl Plugin {
 			&self.version,
 			self.pattern.as_deref(),
 			token
-		)?;
+		)
+		.context(format!("Failed to update {}", name))?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)
@@ -475,7 +466,8 @@ impl Plugin {
 			&self.version,
 			self.pattern.as_deref(),
 			token
-		)?;
+		)
+		.context(format!("Failed to update {}", name))?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)
@@ -501,7 +493,8 @@ impl Plugin {
 
 	/// Remove the `PLUGIN_PATH/name` directory.
 	fn remove(&self, name: &str) -> Result<()> {
-		polling::remove_dir_all(&*PLUGIN_PATH.join(name))?;
+		polling::remove_dir_all(&*PLUGIN_PATH.join(name))
+			.context(format!("Failed to remove {}", name))?;
 		Ok(())
 	}
 }

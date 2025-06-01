@@ -6,15 +6,13 @@ use clap::{builder::styling, CommandFactory, Parser, Subcommand};
 use clap_complete::aot::PowerShell;
 use colored::Colorize;
 use std::{env, io, path::PathBuf, process::Command, sync::LazyLock};
-use util::self_update;
+use util::{self_update, ResultExit};
 
 static PLUGIN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-	PathBuf::from(&env::var("LOCALAPPDATA").unwrap())
-		.join(r"Microsoft\PowerToys\PowerToys Run\Plugins")
+	PathBuf::from(&env::var("LOCALAPPDATA").unwrap()).join(r"Microsoft\PowerToys\PowerToys Run\Plugins")
 });
 static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-	PathBuf::from(&env::var("LOCALAPPDATA").unwrap())
-		.join(r"Microsoft\PowerToys\PowerToys Run\Plugins\version.toml")
+	PathBuf::from(&env::var("LOCALAPPDATA").unwrap()).join(r"Microsoft\PowerToys\PowerToys Run\Plugins\version.toml")
 });
 
 #[derive(Parser)]
@@ -152,32 +150,30 @@ fn main() {
 	match args.cmd {
 		TopCommand::Init => {
 			if PathBuf::from(&*CONFIG_PATH).exists()
-				&& util::prompt("Found existing config, override? [y/N]: ")
-					.unwrap_or_else(|e| exit!(e))
-					!= "y"
+				&& util::prompt("Found existing config, override? [y/N]: ").exit_on_error() != "y"
 			{
 				return;
 			}
-			let config = config::Config::init().unwrap_or_else(|e| exit!(e));
+			let config = config::Config::init().exit_on_error();
 			println!("{config}");
 			println!(
 				"{} Some plugin may failed to find due to incomplete metadata.",
 				"Note:".bright_blue()
 			);
 			println!("      If that occurs, please contact the plugin author.");
-			config.save().unwrap_or_else(|e| exit!(e));
+			config.save().exit_on_error();
 		}
 		TopCommand::Import { dry_run } => {
-			let mut config = config::Config::import().unwrap_or_else(|e| exit!(e));
+			let mut config = config::Config::import().exit_on_error();
 			if dry_run {
-				config.save().unwrap_or_else(|e| exit!(e));
+				config.save().exit_on_error();
 			} else {
 				config.import_plugins(args.no_restart);
 			}
 		}
-		TopCommand::SelfUpdate => self_update().unwrap_or_else(|e| exit!(e)),
+		TopCommand::SelfUpdate => self_update().exit_on_error(),
 		_ => {
-			let mut config = config::Config::new().unwrap_or_else(|e| exit!(e));
+			let mut config = config::Config::new().exit_on_error();
 			match args.cmd {
 				TopCommand::Add {
 					name,
@@ -196,7 +192,7 @@ fn main() {
 						pattern,
 						args.no_restart,
 					)
-					.unwrap_or_else(|e| exit!(e)),
+					.exit_on_error(),
 				TopCommand::Update { name, all, version } => {
 					if all {
 						config.update_all(args.no_restart);
@@ -219,12 +215,9 @@ fn main() {
 				},
 				TopCommand::List => print!("{}", config),
 				TopCommand::Restart => config.restart(),
-				TopCommand::Completion => clap_complete::generate(
-					PowerShell,
-					&mut App::command(),
-					"ptr",
-					&mut io::stdout(),
-				),
+				TopCommand::Completion => {
+					clap_complete::generate(PowerShell, &mut App::command(), "ptr", &mut io::stdout())
+				}
 				_ => unreachable!(),
 			}
 		}

@@ -219,12 +219,15 @@ fn run_process(program: &str, args: &str, admin: bool) -> Result<()> {
 }
 
 pub fn kill_ptr(admin: bool) -> Result<()> {
-	run_process("taskkill.exe", "/F /FI \"IMAGENAME eq PowerToys*\"", admin)?;
+	run_process("taskkill.exe", "/F /FI \"IMAGENAME eq PowerToys*\"", admin)
+		.map_err(|e| anyhow!("Failed to kill PowerToys: {}", e))?;
 	Ok(())
 }
 
 pub fn start_ptr(powertoys_path: &Path) -> Result<()> {
-	let c = Command::new(powertoys_path).spawn()?;
+	let c = Command::new(powertoys_path)
+		.spawn()
+		.map_err(|e| anyhow!("Failed to start PowerToys: {}", e))?;
 	mem::forget(c);
 	Ok(())
 }
@@ -311,9 +314,9 @@ macro_rules! print_message {
     };
 }
 
-/// Print message for adding an item.
+/// Print message as following format for adding an item.
 ///
-/// Works like `println!`.
+/// `+ name@version`
 #[macro_export]
 macro_rules! add {
 	($name:expr, $version:expr) => {
@@ -321,9 +324,9 @@ macro_rules! add {
 	};
 }
 
-/// Print message for item that is up to date.
+/// Print message as following format for item that is up to date.
 ///
-/// Works like `println!`.
+/// `= name@version`
 #[macro_export]
 macro_rules! up_to_date {
 	($name:expr, $version:expr) => {
@@ -331,9 +334,9 @@ macro_rules! up_to_date {
 	};
 }
 
-/// Print message for removing an item.
+/// Print message as following format for removing an item.
 ///
-/// Works like `println!`.
+/// `- name`
 #[macro_export]
 macro_rules! remove {
 	($name:expr) => {
@@ -346,7 +349,7 @@ macro_rules! remove {
 macro_rules! error {
     ($msg:expr) => {{
         use colored::Colorize;
-        eprintln!("{} {}", "error:".bright_red().bold(), $msg)
+        eprintln!("{} {:#}", "error:".bright_red().bold(), $msg)
     }};
     ($fmt:expr, $($arg:tt)*) => {{
         use colored::Colorize;
@@ -354,12 +357,23 @@ macro_rules! error {
     }};
 }
 
-/// Print an error message to stderr and exit with code 0.
+/// Print an error message to stderr and exit with code 1.
 #[macro_export]
 macro_rules! exit {
     ($($arg:tt)*) => {{
         $crate::error!($($arg)*);
-        std::process::exit(0);
+        std::process::exit(1);
     }};
 }
 // endregion
+
+pub trait ResultExit<T> {
+	/// Exit the program with error code 1 if Result is Err, otherwise return the Ok value
+	fn exit_on_error(self) -> T;
+}
+
+impl<T> ResultExit<T> for Result<T> {
+	fn exit_on_error(self) -> T {
+		self.unwrap_or_else(|e| exit!(e))
+	}
+}
