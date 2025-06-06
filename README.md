@@ -61,23 +61,35 @@ ptr update --all
 
 A config file will be created at `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins\version.toml`. Check [config](#config) for more detail.
 
-Check result with `list`:
+#### Open config file in default editor
+
+```
+ptr edit
+```
+
+#### Check installed plugins with `list`
 
 ```
 ptr list
 ```
 
-Use `help`, `-h` or `--help` to quickly check for usage:
+#### Use `help`, `-h` or `--help` to quickly check for usage
 
 ```
 ptr pin -h
 ptr pin add -h
 ```
 
-Use alias to type commands faster:
+#### Use alias to type commands faster
 
 ```
 ptr u -a
+```
+
+#### Self update to latest
+
+```
+ptr self-update
 ```
 
 ## Config
