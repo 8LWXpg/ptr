@@ -102,7 +102,7 @@ token = 'token' # Token used when making request to GitHub.
 no_restart = false  # Set true to not restart PowerToys after plugin modification
 ```
 
-For the generated config structure, refer to [`test.toml`](./test/test.toml).
+For the generated config structure, refer to struct `Config` in [`config.rs`](./src/config.rs).
 
 ## Usage
 
