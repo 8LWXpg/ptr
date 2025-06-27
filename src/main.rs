@@ -2,17 +2,19 @@ mod config;
 mod polling;
 mod util;
 
-use clap::{builder::styling, CommandFactory, Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand, builder::styling};
 use clap_complete::aot::PowerShell;
 use colored::Colorize;
 use std::{env, io, path::PathBuf, process::Command, sync::LazyLock};
-use util::{self_update, ResultExit};
+use util::{ResultExit, self_update};
 
 static PLUGIN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-	PathBuf::from(&env::var("LOCALAPPDATA").unwrap()).join(r"Microsoft\PowerToys\PowerToys Run\Plugins")
+	PathBuf::from(&env::var("LOCALAPPDATA").unwrap())
+		.join(r"Microsoft\PowerToys\PowerToys Run\Plugins")
 });
 static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-	PathBuf::from(&env::var("LOCALAPPDATA").unwrap()).join(r"Microsoft\PowerToys\PowerToys Run\Plugins\version.toml")
+	PathBuf::from(&env::var("LOCALAPPDATA").unwrap())
+		.join(r"Microsoft\PowerToys\PowerToys Run\Plugins\version.toml")
 });
 
 #[derive(Parser)]
@@ -213,11 +215,14 @@ fn main() {
 					PinSubcommand::Remove { name } => config.pin_remove(name),
 					PinSubcommand::Reset => config.pin_reset(),
 				},
-				TopCommand::List => print!("{}", config),
+				TopCommand::List => print!("{config}"),
 				TopCommand::Restart => config.restart(),
-				TopCommand::Completion => {
-					clap_complete::generate(PowerShell, &mut App::command(), "ptr", &mut io::stdout())
-				}
+				TopCommand::Completion => clap_complete::generate(
+					PowerShell,
+					&mut App::command(),
+					"ptr",
+					&mut io::stdout(),
+				),
 				_ => unreachable!(),
 			}
 		}

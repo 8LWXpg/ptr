@@ -26,7 +26,7 @@ where
 		}
 	}
 
-	Err(last_error.unwrap_or_else(|| io::Error::new(io::ErrorKind::Other, "Max retries reached")))
+	Err(last_error.unwrap_or_else(|| io::Error::other("Max retries reached")))
 }
 
 /// Wrapper around `io::copy` that retries on errors.

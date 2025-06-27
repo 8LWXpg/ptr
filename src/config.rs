@@ -1,17 +1,17 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use colored::Colorize;
 use core::fmt;
 use serde::{Deserialize, Serialize, Serializer};
 use std::borrow::Cow;
-use std::collections::{hash_map::Entry, BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet, hash_map::Entry};
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use tabwriter::TabWriter;
 
 use crate::polling;
-use crate::util::{get_powertoys_path, kill_ptr, start_ptr, ResultExit};
-use crate::{add, error, exit, gh_dl, remove, up_to_date, CONFIG_PATH, PLUGIN_PATH};
+use crate::util::{ResultExit, get_powertoys_path, kill_ptr, start_ptr};
+use crate::{CONFIG_PATH, PLUGIN_PATH, add, error, exit, gh_dl, remove, up_to_date};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
@@ -163,14 +163,17 @@ impl Config {
 		let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
 		kill_ptr(self.admin).exit_on_error();
 		for (name, plugin) in &mut self.plugins {
-			if let Err(e) = plugin.force_update(name, &self.arch, self.token.as_deref()) {
-				if !no_restart {
-					start_ptr(&self.pt_path).unwrap_or_else(|e| error!(e));
+			match plugin.force_update(name, &self.arch, self.token.as_deref()) {
+				Err(e) => {
+					if !no_restart {
+						start_ptr(&self.pt_path).unwrap_or_else(|e| error!(e));
+					}
+					exit!("Failed to import {}: {}", name, e)
 				}
-				exit!("Failed to import {}: {}", name, e)
-			} else {
-				add!(name, &plugin.version);
-				new_plugins.insert(name.clone(), plugin.clone());
+				_ => {
+					add!(name, &plugin.version);
+					new_plugins.insert(name.clone(), plugin.clone());
+				}
 			}
 		}
 		if !no_restart {
@@ -265,10 +268,10 @@ impl Config {
 		let no_restart = no_restart || self.no_restart;
 		kill_ptr(self.admin).exit_on_error();
 		for (name, plugin) in &mut self.plugins {
-			if let Some(pins) = &self.pin {
-				if pins.contains(name) {
-					continue;
-				}
+			if let Some(pins) = &self.pin
+				&& pins.contains(name)
+			{
+				continue;
 			}
 			match plugin.update(name, &self.arch, self.token.as_deref()) {
 				Ok(updated) => {
@@ -440,7 +443,7 @@ impl Plugin {
 			self.pattern.as_deref(),
 			token
 		)
-		.context(format!("Failed to update {}", name))?;
+		.context(format!("Failed to update {name}"))?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)
@@ -467,7 +470,7 @@ impl Plugin {
 			self.pattern.as_deref(),
 			token
 		)
-		.context(format!("Failed to update {}", name))?;
+		.context(format!("Failed to update {name}"))?;
 		if version != self.version {
 			self.version = version;
 			Ok(true)
@@ -494,7 +497,7 @@ impl Plugin {
 	/// Remove the `PLUGIN_PATH/name` directory.
 	fn remove(&self, name: &str) -> Result<()> {
 		polling::remove_dir_all(&*PLUGIN_PATH.join(name))
-			.context(format!("Failed to remove {}", name))?;
+			.context(format!("Failed to remove {name}"))?;
 		Ok(())
 	}
 }
@@ -527,6 +530,6 @@ mod tests {
 		let mut toml = String::new();
 		file.read_to_string(&mut toml).unwrap();
 		let config: Config = toml::from_str(&toml).unwrap();
-		println!("{:?}", config);
+		println!("{config:?}");
 	}
 }

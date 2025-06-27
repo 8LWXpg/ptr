@@ -1,8 +1,8 @@
-use anyhow::{anyhow, bail, Ok, Result};
+use anyhow::{Ok, Result, anyhow, bail};
 use colored::Colorize;
 use regex::Regex;
 use reqwest::blocking::Client;
-use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, USER_AGENT};
+use reqwest::header::{ACCEPT, AUTHORIZATION, HeaderMap, USER_AGENT};
 use serde::Deserialize;
 use std::fs::{self, File};
 use std::io::{self, Write};
@@ -11,9 +11,9 @@ use std::process::Command;
 use std::{env, mem};
 use zip::ZipArchive;
 
+use crate::PLUGIN_PATH;
 use crate::config::Arch;
 use crate::polling;
-use crate::PLUGIN_PATH;
 use crate::{error, exit};
 
 #[derive(Deserialize)]
@@ -100,17 +100,17 @@ pub fn gh_dl(
 	}
 	let res: ApiResponse = res.json()?;
 	let tag = res.tag_name;
-	if let Some(current_version) = current_version {
-		if tag == current_version {
-			return Ok(current_version.to_string());
-		}
+	if let Some(current_version) = current_version
+		&& tag == current_version
+	{
+		return Ok(current_version.to_string());
 	}
 
 	let assets = res.assets;
 	let asset = match assets.iter().find(|a| {
 		if let Some(pattern) = pattern {
 			let p = Regex::new(pattern).unwrap_or_else(|e| {
-				exit!(anyhow!(e).context(format!("Invalid regex pattern: '{}': ", pattern)))
+				exit!(anyhow!(e).context(format!("Invalid regex pattern: '{pattern}': ")))
 			});
 			p.is_match(&a.name)
 		} else {
@@ -185,10 +185,10 @@ fn extract_zip(zip_path: &Path, root_name: &str) -> Result<()> {
 }
 
 fn run_process(program: &str, args: &str, admin: bool) -> Result<()> {
-	use windows::core::{w, HSTRING, PCWSTR};
 	use windows::Win32::Foundation::CloseHandle;
-	use windows::Win32::System::Threading::{GetExitCodeProcess, WaitForSingleObject, INFINITE};
-	use windows::Win32::UI::Shell::{ShellExecuteExW, SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW};
+	use windows::Win32::System::Threading::{GetExitCodeProcess, INFINITE, WaitForSingleObject};
+	use windows::Win32::UI::Shell::{SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW, ShellExecuteExW};
+	use windows::core::{HSTRING, PCWSTR, w};
 
 	let mut sei: SHELLEXECUTEINFOW = unsafe { mem::zeroed() };
 	sei.cbSize = mem::size_of::<SHELLEXECUTEINFOW>() as u32;
