@@ -28,7 +28,7 @@ cargo install --git https://github.com/8LWXpg/ptr.git
 - Automatically download and install plugins from GitHub.
 - Restart PowerToys after installing or removing plugins.
 - Update all plugins with a single command.
-- Restore plugins from a configuration file.
+- Restore plugins from configuration file.
 
 ## Quick Start
 
