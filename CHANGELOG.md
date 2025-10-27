@@ -5,6 +5,7 @@
 ### Changed
 
 - Optimized for binary size.
+- Updated to Rust 1.88, edition 2024
 
 ## [0.15.0]
 

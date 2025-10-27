@@ -62,7 +62,7 @@ macro_rules! gh_dl {
 ///
 /// * `repo` - Repository identifier.
 /// * `version` - Tagged version.
-/// * `arch` - Architecture of the system, either x64 or arm64.
+/// * `arch` - Architecture of the system, either x64 or ARM64.
 /// * `current_version` - Current tagged version.
 /// * `pattern` - Match pattern for assets.
 /// * `token` - GitHub auth token.
@@ -149,7 +149,7 @@ fn extract_zip(zip_path: &Path, root_name: &str) -> Result<()> {
 	let mut archive = ZipArchive::new(File::open(zip_path)?)?;
 	env::set_current_dir(&*PLUGIN_PATH)?;
 
-	// Locate for.dll file and find it's parent
+	// Locate for.dll file and find its parent
 	let dll = archive
 		.file_names()
 		.find(|f| f.ends_with(".dll"))
@@ -357,7 +357,7 @@ macro_rules! error {
     }};
 }
 
-/// Print an error message to stderr and exit with code 1.
+/// Print an error message to standard error and exit with code 1.
 #[macro_export]
 macro_rules! exit {
     ($($arg:tt)*) => {{
