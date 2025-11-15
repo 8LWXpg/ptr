@@ -13,8 +13,7 @@ use zip::ZipArchive;
 
 use crate::PLUGIN_PATH;
 use crate::config::Arch;
-use crate::polling;
-use crate::{error, exit};
+use crate::exit;
 
 #[derive(Deserialize)]
 struct ApiResponse {
@@ -30,7 +29,6 @@ struct Assets {
 
 impl Assets {
 	/// Currently match for upper and lower case arch names.
-	///
 	fn is_arch(&self, arch: &Arch) -> bool {
 		let arch = &arch.to_string();
 		(self.name.contains(arch) || self.name.contains(&arch.to_uppercase()))
@@ -124,8 +122,7 @@ pub fn gh_dl(
 	let res = Client::new().get(url).send()?;
 
 	let file_path = PLUGIN_PATH.join(name);
-	let mut file = File::create(&file_path)?;
-	file.write_all(&res.bytes()?)?;
+	File::create(&file_path)?.write_all(&res.bytes()?)?;
 
 	extract_zip(&file_path, root_name)?;
 	fs::remove_file(&file_path)?;
@@ -148,38 +145,7 @@ fn manual_select(assets: &[Assets]) -> Result<&Assets> {
 fn extract_zip(zip_path: &Path, root_name: &str) -> Result<()> {
 	let mut archive = ZipArchive::new(File::open(zip_path)?)?;
 	env::set_current_dir(&*PLUGIN_PATH)?;
-
-	// Locate for.dll file and find its parent
-	let dll = archive
-		.file_names()
-		.find(|f| f.ends_with(".dll"))
-		.ok_or(anyhow!("No .dll file found in zip"))?
-		.to_owned();
-	let parent = Path::new(&dll).parent().unwrap_or(Path::new(""));
-
-	// Extract all files and keep the directory structure
-	let root = PathBuf::from(root_name);
-	for i in 0..archive.len() {
-		let mut file = archive.by_index(i)?;
-
-		let out_path =
-			if let std::result::Result::Ok(path) = Path::new(file.name()).strip_prefix(parent) {
-				root.join(path)
-			} else {
-				error!("Unexpected file in zip at {}", file.name());
-				continue;
-			};
-
-		if file.is_dir() {
-			fs::create_dir_all(out_path)?;
-		} else {
-			if let Some(p) = out_path.parent() {
-				fs::create_dir_all(p)?;
-			}
-			let mut out_file = File::create(out_path)?;
-			polling::copy(&mut file, &mut out_file)?;
-		}
-	}
+	archive.extract_unwrapped_root_dir(root_name, zip::read::root_dir_common_filter)?;
 
 	Ok(())
 }

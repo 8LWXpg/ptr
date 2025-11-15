@@ -1,6 +1,5 @@
 //! Retry IO operations on error.
 
-use std::io::{Read, Write};
 use std::path::Path;
 use std::thread;
 use std::time::Duration;
@@ -27,17 +26,6 @@ where
 	}
 
 	Err(last_error.unwrap_or_else(|| io::Error::other("Max retries reached")))
-}
-
-/// Wrapper around `io::copy` that retries on errors.
-pub fn copy<R, W>(reader: &mut R, writer: &mut W) -> io::Result<u64>
-where
-	R: ?Sized,
-	W: ?Sized,
-	R: Read,
-	W: Write,
-{
-	retry(|| io::copy(reader, writer))
 }
 
 /// Wrapper around `fs::remove_dir_all` that retries on errors.

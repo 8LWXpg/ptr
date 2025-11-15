@@ -34,7 +34,7 @@ pub struct ImportConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-/// plugin.json metadata
+/// `plugin.json` metadata
 pub struct PluginMetadata {
 	#[serde(rename = "Version")]
 	version: String,
