@@ -1,11 +1,13 @@
 # Change Log
 
-## Unreleased
+## [0.15.1]
 
 ### Changed
 
 - Optimized for binary size.
 - Updated to Rust 1.88, edition 2024
+- Bumped dependencies
+- Refactor
 
 ## [0.15.0]
 
