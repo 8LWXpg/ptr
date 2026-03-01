@@ -15,15 +15,18 @@ use crate::{CONFIG_PATH, PLUGIN_PATH, add, error, exit, gh_dl, remove, up_to_dat
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-	arch: Arch,
-	pt_path: PathBuf,
+	// ----- Manual field -----
 	/// Kill and run as admin
 	admin: bool,
-	/// Do not restart PowerToys after plugin modification
-	no_restart: bool,
-	token: Option<String>,
-	pin: Option<HashSet<String>>,
 	/// GitHub auth token
+	token: Option<String>,
+	/// Whether to not restart PowerToys after plugin modification
+	no_restart: bool,
+
+	// ----- Auto field -----
+	arch: Arch,
+	pt_path: PathBuf,
+	pin: Option<HashSet<String>>,
 	#[serde(serialize_with = "sort_keys")]
 	plugins: HashMap<String, Plugin>,
 }
