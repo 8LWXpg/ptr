@@ -1,26 +1,18 @@
 [package]
 name = "ptr"
 version = "0.15.1"
-authors = ["8LWXpg"]
-description = "PowerToys Run plugin manager"
-license = "MIT"
-repository = "https://github.com/8LWXpg/ptr"
-readme = "README.md"
 edition = "2024"
 rust-version = "1.88.0"
+description = "PowerToys Run plugin manager"
+readme = "README.md"
+repository = "https://github.com/8LWXpg/ptr"
+license = "MIT"
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }{ archive-suffix }"
 bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "zip"
 disabled-strategies = ["quick-install", "compile"]
-
-[profile.release]
-codegen-units = 1
-lto = true
-opt-level = "s"
-strip = true
-panic = "abort"
 
 [dependencies]
 anyhow = "1.0.100"
@@ -29,9 +21,9 @@ clap_complete = "4.5.60"
 colored = "3.0.0"
 regex = { version = "1.12.2", default-features = false }
 reqwest = { version = "0.12.24", default-features = false, features = [
-	"blocking",
-	"json",
-	"native-tls",
+  "blocking",
+  "json",
+  "native-tls",
 ] }
 self-replace = "1.5.0"
 serde = { version = "1.0.228", features = ["derive"] }
@@ -39,8 +31,15 @@ serde_json = "1.0.145"
 tabwriter = { version = "1.4.1", features = ["ansi_formatting"] }
 toml = "0.9.8"
 windows = { version = "0.62.2", features = [
-	"Win32_UI_Shell",
-	"Win32_System_Registry",
-	"Win32_System_Threading",
+  "Win32_System_Registry",
+  "Win32_System_Threading",
+  "Win32_UI_Shell",
 ] }
 zip = { version = "6.0.0", default-features = false, features = ["deflate"] }
+
+[profile.release]
+opt-level = "s"
+strip = true
+lto = true
+panic = "abort"
+codegen-units = 1
