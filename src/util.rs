@@ -11,9 +11,8 @@ use std::process::Command;
 use std::{env, mem};
 use zip::ZipArchive;
 
-use crate::PLUGIN_PATH;
 use crate::config::Arch;
-use crate::exit;
+use crate::{PLUGIN_PATH, exit};
 
 #[derive(Deserialize)]
 struct ApiResponse {

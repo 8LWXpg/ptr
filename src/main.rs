@@ -1,21 +1,11 @@
-mod config;
-mod polling;
-mod util;
-
 use clap::{CommandFactory, Parser, Subcommand, builder::styling};
 use clap_complete::aot::PowerShell;
 use colored::Colorize;
-use std::{env, io, path::PathBuf, process::Command, sync::LazyLock};
-use util::{ResultExit, self_update};
-
-static PLUGIN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-	PathBuf::from(&env::var("LOCALAPPDATA").unwrap())
-		.join(r"Microsoft\PowerToys\PowerToys Run\Plugins")
-});
-static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-	PathBuf::from(&env::var("LOCALAPPDATA").unwrap())
-		.join(r"Microsoft\PowerToys\PowerToys Run\Plugins\version.toml")
-});
+use ptr::{
+	CONFIG_PATH, config, exit,
+	util::{self, ResultExit, self_update},
+};
+use std::{io, path::PathBuf, process::Command};
 
 #[derive(Parser)]
 #[clap(

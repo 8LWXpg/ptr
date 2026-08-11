@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Config",
+  "type": "object",
+  "properties": {
+    "admin": {
+      "description": "Kill and run as admin",
+      "type": "boolean"
+    },
+    "arch": {
+      "$ref": "#/$defs/Arch"
+    },
+    "no_restart": {
+      "description": "Whether to not restart PowerToys after plugin modification",
+      "type": "boolean"
+    },
+    "pin": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "plugins": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Plugin"
+      }
+    },
+    "pt_path": {
+      "type": "string"
+    },
+    "token": {
+      "description": "GitHub auth token",
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "admin",
+    "no_restart",
+    "arch",
+    "pt_path",
+    "plugins"
+  ],
+  "$defs": {
+    "Arch": {
+      "type": "string",
+      "enum": [
+        "x64",
+        "arm64"
+      ]
+    },
+    "Plugin": {
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repo": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "repo",
+        "version"
+      ]
+    }
+  }
+}

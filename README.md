@@ -16,7 +16,7 @@ Download binary from [releases](https://github.com/8LWXpg/ptr/releases) page.
 cargo binstall --git https://github.com/8LWXpg/ptr ptr
 ```
 
-### Build from source
+### Build from Source
 
 ```
 cargo install --git https://github.com/8LWXpg/ptr.git

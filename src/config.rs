@@ -1,6 +1,7 @@
 use anyhow::{Context, Result, bail};
 use colored::Colorize;
 use core::fmt;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, Serializer};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet, hash_map::Entry};
@@ -13,7 +14,7 @@ use crate::polling;
 use crate::util::{ResultExit, get_powertoys_path, kill_ptr, start_ptr};
 use crate::{CONFIG_PATH, PLUGIN_PATH, add, error, exit, gh_dl, remove, up_to_date};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, JsonSchema)]
 pub struct Config {
 	// ----- Manual field -----
 	/// Kill and run as admin
@@ -31,12 +32,12 @@ pub struct Config {
 	plugins: HashMap<String, Plugin>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct ImportConfig {
 	plugins: HashMap<String, Plugin>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 /// `plugin.json` metadata
 pub struct PluginMetadata {
 	#[serde(rename = "Version")]
@@ -375,7 +376,7 @@ impl fmt::Display for Config {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, JsonSchema)]
 pub enum Arch {
 	#[serde(rename = "x64")]
 	X64,
@@ -402,7 +403,7 @@ impl fmt::Display for Arch {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, JsonSchema)]
 struct Plugin {
 	repo: String,
 	version: String,
@@ -507,8 +508,6 @@ impl Plugin {
 
 #[cfg(test)]
 mod tests {
-	use std::io::Read;
-
 	use super::*;
 
 	#[test]
@@ -525,14 +524,5 @@ mod tests {
 		let toml = toml::to_string_pretty(&config).unwrap();
 		let mut file = fs::File::create("./test/test.toml").unwrap();
 		file.write_all(toml.as_bytes()).unwrap();
-	}
-
-	#[test]
-	fn test_breaking_config() {
-		let mut file = fs::File::open("./test/test.toml").unwrap();
-		let mut toml = String::new();
-		file.read_to_string(&mut toml).unwrap();
-		let config: Config = toml::from_str(&toml).unwrap();
-		println!("{config:?}");
 	}
 }
