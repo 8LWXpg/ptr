@@ -7,12 +7,12 @@ Usage: ptr.exe [OPTIONS] <COMMAND>
 
 Commands:
   init         Try to find and add existing plugins to config
-  add          Add a plugin [aliases: a]
-  update       Update plugins [aliases: u]
-  remove       Remove plugins [aliases: r]
-  list         List all installed plugins [aliases: l]
-  pin          Pin plugins so it's not updated with `update --all` [aliases: p]
-  import       Import plugins from configuration file [aliases: i]
+  add          Add a plugin [alias: a]
+  update       Update plugins [alias: u]
+  remove       Remove plugins [alias: r]
+  list         List all installed plugins [alias: l]
+  pin          Pin plugins so it's not updated with `update --all` [alias: p]
+  import       Import plugins from configuration file [alias: i]
   restart      Restart PowerToys
   edit         Open config file in default editor
   self-update  Self update to latest
@@ -107,8 +107,13 @@ ptr r GitHubRepo ProcessKiller
 
 ## List
 
-```
+```list --help
+List all installed plugins
+
 Usage: ptr.exe list
+
+Options:
+  -h, --help  Print help
 ```
 
 ## Pin
@@ -119,9 +124,9 @@ Pin plugins so it's not updated with `update --all`
 Usage: ptr.exe pin <COMMAND>
 
 Commands:
-  add     Add pins [aliases: a]
-  remove  Remove pins [aliases: r]
-  list    List pins [aliases: l]
+  add     Add pins [alias: a]
+  remove  Remove pins [alias: r]
+  list    List pins [alias: l]
   reset   Clear all pins
   help    Print this message or the help of the given subcommand(s)
 
@@ -145,26 +150,47 @@ Options:
 
 ## Restart
 
-```
+```restart --help
+Restart PowerToys
+
 Usage: ptr.exe restart
+
+Options:
+  -h, --help  Print help
 ```
 
 ## Edit
 
-```
-Usage: ptr.exe edit
+```edit --help
+Open config file in default editor
+
+Usage: ptr.exe edit [OPTIONS]
+
+Options:
+  -p, --path  Prints path instead
+  -h, --help  Print help
 ```
 
 ## Self Update
 
-```
+```self-update --help
+Self update to latest
+
 Usage: ptr.exe self-update
+
+Options:
+  -h, --help  Print help
 ```
 
 ## Completion
 
-```
+```completion --help
+Generate shell completion (PowerShell)
+
 Usage: ptr.exe completion
+
+Options:
+  -h, --help  Print help
 ```
 
 Add this line in your PowerShell `$PROFILE`:

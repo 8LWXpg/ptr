@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.15.2]
+
+### Added
+
+- Generated toml schema on [schema.json](./examples/schema.json).
+- Added option `--path` for `edit` subcommand to print path instead.
+
 ## [0.15.1]
 
 ### Changed

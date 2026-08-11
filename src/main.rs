@@ -92,7 +92,11 @@ enum TopCommand {
 
 	#[clap()]
 	/// Open config file in default editor
-	Edit,
+	Edit {
+		#[clap(short, long)]
+		/// Prints path instead
+		path: bool,
+	},
 
 	#[clap()]
 	/// Self update to latest
@@ -193,11 +197,15 @@ fn main() {
 					}
 				}
 				TopCommand::Remove { name } => config.remove(name, args.no_restart),
-				TopCommand::Edit => {
-					_ = Command::new("cmd")
-						.args(["/c", (*CONFIG_PATH).to_str().unwrap()])
-						.status()
-						.unwrap_or_else(|e| exit!(e))
+				TopCommand::Edit { path } => {
+					if path {
+						print!("{}", (*CONFIG_PATH).to_str().unwrap())
+					} else {
+						_ = Command::new("cmd")
+							.args(["/c", (*CONFIG_PATH).to_str().unwrap()])
+							.status()
+							.unwrap_or_else(|e| exit!(e))
+					}
 				}
 				TopCommand::Pin { cmd } => match cmd {
 					PinSubcommand::Add { name } => config.pin_add(name),

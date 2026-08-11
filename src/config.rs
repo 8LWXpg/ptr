@@ -152,7 +152,7 @@ impl Config {
 
 	/// Note: This method already used in the other methods.
 	pub fn save(&self) -> Result<()> {
-		fs::write(&*CONFIG_PATH, toml::to_string(self).unwrap())
+		fs::write(&*CONFIG_PATH, format!("#:schema https://raw.githubusercontent.com/8LWXpg/ptr/refs/heads/master/examples/schema.json\n{}",toml::to_string(self).unwrap()))
 			.context("Failed to save config")?;
 		Ok(())
 	}
