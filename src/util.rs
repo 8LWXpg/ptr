@@ -28,7 +28,7 @@ struct Assets {
 
 impl Assets {
 	/// Currently match for upper and lower case arch names.
-	fn is_arch(&self, arch: &Arch) -> bool {
+	fn is_arch(&self, arch: Arch) -> bool {
 		let arch = &arch.to_string();
 		(self.name.contains(arch) || self.name.contains(&arch.to_uppercase()))
 			&& self.name.ends_with(".zip")
@@ -70,7 +70,7 @@ pub fn gh_dl(
 	root_name: &str,
 	repo: &str,
 	version: Option<&str>,
-	arch: &Arch,
+	arch: Arch,
 	current_version: Option<&str>,
 	pattern: Option<&str>,
 	token: Option<&str>,

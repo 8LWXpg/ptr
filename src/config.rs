@@ -167,7 +167,7 @@ impl Config {
 		let mut new_plugins: HashMap<String, Plugin> = HashMap::new();
 		kill_ptr(self.admin).exit_on_error();
 		for (name, plugin) in &mut self.plugins {
-			match plugin.force_update(name, &self.arch, self.token.as_deref()) {
+			match plugin.force_update(name, self.arch, self.token.as_deref()) {
 				Err(e) => {
 					if !no_restart {
 						start_ptr(&self.pt_path).unwrap_or_else(|e| error!(e));
@@ -203,7 +203,7 @@ impl Config {
 					name,
 					repo,
 					version,
-					&self.arch,
+					self.arch,
 					pattern,
 					self.token.as_deref(),
 				)?)
@@ -232,7 +232,7 @@ impl Config {
 				let Some(plugin) = self.plugins.get_mut(name) else {
 					continue;
 				};
-				match plugin.update_to(name, &self.arch, &version, self.token.as_deref()) {
+				match plugin.update_to(name, self.arch, &version, self.token.as_deref()) {
 					Ok(updated) => {
 						if updated {
 							add!(name, plugin.version)
@@ -251,7 +251,7 @@ impl Config {
 			let Some(plugin) = self.plugins.get_mut(name) else {
 				continue;
 			};
-			match plugin.update(name, &self.arch, self.token.as_deref()) {
+			match plugin.update(name, self.arch, self.token.as_deref()) {
 				Ok(updated) => {
 					if updated {
 						add!(name, plugin.version)
@@ -277,7 +277,7 @@ impl Config {
 			{
 				continue;
 			}
-			match plugin.update(name, &self.arch, self.token.as_deref()) {
+			match plugin.update(name, self.arch, self.token.as_deref()) {
 				Ok(updated) => {
 					if updated {
 						add!(name, plugin.version)
@@ -376,7 +376,7 @@ impl fmt::Display for Config {
 	}
 }
 
-#[derive(Serialize, Deserialize, JsonSchema)]
+#[derive(Serialize, Deserialize, JsonSchema, Clone, Copy)]
 pub enum Arch {
 	#[serde(rename = "x64")]
 	X64,
@@ -416,7 +416,7 @@ impl Plugin {
 		name: &str,
 		repo: String,
 		version: Option<String>,
-		arch: &Arch,
+		arch: Arch,
 		pattern: Option<String>,
 		token: Option<&str>,
 	) -> Result<Self> {
@@ -437,7 +437,7 @@ impl Plugin {
 
 	/// Update the plugin to the latest version.
 	/// Return `true` if the version is updated.
-	fn update(&mut self, name: &str, arch: &Arch, token: Option<&str>) -> Result<bool> {
+	fn update(&mut self, name: &str, arch: Arch, token: Option<&str>) -> Result<bool> {
 		let version = gh_dl!(
 			name,
 			&self.repo,
@@ -461,7 +461,7 @@ impl Plugin {
 	fn update_to(
 		&mut self,
 		name: &str,
-		arch: &Arch,
+		arch: Arch,
 		version: &str,
 		token: Option<&str>,
 	) -> Result<bool> {
@@ -484,7 +484,7 @@ impl Plugin {
 	}
 
 	/// Update without checking current version.
-	fn force_update(&mut self, name: &str, arch: &Arch, token: Option<&str>) -> Result<()> {
+	fn force_update(&mut self, name: &str, arch: Arch, token: Option<&str>) -> Result<()> {
 		let version = gh_dl!(
 			name,
 			&self.repo,
